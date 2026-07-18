@@ -286,7 +286,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     async function send(event,parentId,current){event.preventDefault();const scope=event.currentTarget;const fields=scope.querySelectorAll('input,textarea');const pseudo=parentId?'DicoCheval':fields[0].value.trim();const contenu=parentId?fields[0].value.trim():fields[1].value.trim();const info=scope.querySelector('.comment-info');if(!contenu)return;if(info)info.textContent='Publication…';const {error}=await db.from('commentaires').insert({actualite_id:articleId,auteur_id:current.id,pseudo:current.id===OWNER?'DicoCheval':pseudo||'Visiteur',contenu,parent_id:parentId});if(error){if(info)info.textContent='Impossible de publier ce commentaire.';return}load()}
     await load();
   }
-  async function sync(force=false){document.querySelectorAll('.news-card[data-article-id]').forEach(card=>{if(force)card.querySelector('.official-comments')?.remove();mount(card)})}
+  async function sync(force=false){document.querySelectorAll('.news-card[data-article-id]').forEach(card=>{if(force===true)card.querySelector('.official-comments')?.remove();mount(card)})}
   new MutationObserver(sync).observe(document.body,{childList:true,subtree:true});db.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));sync();
 })();
 /* Accès rapides à côté de la recherche. */
