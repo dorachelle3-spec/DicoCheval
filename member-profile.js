@@ -33,3 +33,29 @@
   setInterval(async()=>{const {data}=await db.auth.getUser();if(data.user){currentUser=await updatePoints(data.user);if(modal.classList.contains('open'))renderAvatars();refreshButton()}},60000);
   db.auth.onAuthStateChange(()=>setTimeout(refreshButton,0));refreshButton();
 })();
+
+/* Traduction de l'espace membre. */
+(() => {
+  const select=document.getElementById('languageHero');
+  if(!select)return;
+  function translate(){
+    const en=select.value==='en';
+    const t=(fr,english)=>en?english:fr;
+    const modal=document.getElementById('memberModal');
+    if(!modal)return;
+    modal.querySelector('h2').textContent=t('Mon espace membre','My member area');
+    modal.querySelector('label[for="memberPseudo"]').textContent=t('Pseudo','Username');
+    modal.querySelector('#memberPoints')?.parentElement?.previousElementSibling?.replaceChildren(document.createTextNode(t('Mes points','My points')));
+    const headings=modal.querySelectorAll('h3');
+    if(headings[1])headings[1].textContent=t('Choisir mon avatar','Choose my avatar');
+    if(headings[2])headings[2].textContent=t('Boîte de réception','Inbox');
+    const upload=modal.querySelector('label[for="memberAvatarFile"]');if(upload)upload.textContent=t('Photo personnelle — 40 points','Personal photo — 40 points');
+    const auto=document.getElementById('memberAutoDelete');if(auto?.parentElement)auto.parentElement.lastChild.textContent=t(' Supprimer automatiquement les notifications après lecture',' Automatically delete notifications after reading');
+    const save=document.getElementById('saveMemberProfile');if(save)save.textContent=t('Enregistrer mon profil','Save my profile');
+    const out=document.getElementById('memberSignOut');if(out)out.textContent=t('Se déconnecter','Sign out');
+    const del=document.getElementById('deleteMemberAccount');if(del)del.textContent=t('Supprimer définitivement mon compte','Permanently delete my account');
+    const visitor=document.getElementById('topVisitorAccess');if(visitor&&!visitor.querySelector('.notification-badge'))visitor.textContent=t('Mon espace membre','My member area');
+    const owner=document.getElementById('topOwnerAccess');if(owner)owner.textContent=t('Espace propriétaire','Owner area');
+  }
+  select.addEventListener('change',()=>setTimeout(translate,30));translate();
+})();
