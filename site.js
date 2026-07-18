@@ -288,3 +288,19 @@ const news=document.createElement('section');news.id='actualite';news.className=
   async function sync(){document.querySelectorAll('.news-card[data-article-id]').forEach(card=>mount(card))}
   new MutationObserver(sync).observe(document.body,{childList:true,subtree:true});sync();
 })();
+/* Accès rapides à côté de la recherche. */
+(() => {
+  const wrap=document.querySelector('.search .wrap');
+  if(!wrap)return;
+  document.head.insertAdjacentHTML('beforeend','<style>.top-account-actions{display:flex;gap:7px;align-items:center}.top-account-actions .btn{padding:10px 12px;font-size:12px;white-space:nowrap}@media(max-width:720px){.search .wrap{flex-wrap:wrap}.search input{min-width:100%}.top-account-actions{width:100%}.top-account-actions .btn{flex:1}}</style>');
+  const actions=document.createElement('div');actions.className='top-account-actions';actions.innerHTML='<button class="btn" id="topOwnerAccess">Espace propriétaire</button><button class="btn" id="topVisitorAccess">Se connecter visiteur</button>';
+  wrap.append(actions);
+  const ownerButton=document.getElementById('topOwnerAccess'),visitorButton=document.getElementById('topVisitorAccess');
+  const db=window.supabase.createClient('https://mmxdlnfntpufwwkdvgzc.supabase.co','sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP');
+  const OWNER='f22161e4-7528-4fd2-9860-a18be084b1f6';
+  function labels(){const en=document.getElementById('languageHero')?.value==='en';ownerButton.textContent=en?'Owner area':'Espace propriétaire';visitorButton.textContent=en?'Visitor sign in':'Se connecter visiteur'}
+  async function updateAccess(){labels();const {data}=await db.auth.getUser();if(!data.user)return;if(data.user.id===OWNER)ownerButton.textContent=document.getElementById('languageHero')?.value==='en'?'Owner connected':'Propriétaire connectée';else visitorButton.textContent=document.getElementById('languageHero')?.value==='en'?'Visitor connected':'Visiteur connecté'}
+  ownerButton.onclick=()=>document.getElementById('ownerButton')?.click();
+  visitorButton.onclick=()=>document.getElementById('commentAuthModal')?.classList.add('open');
+  document.getElementById('languageHero')?.addEventListener('change',updateAccess);updateAccess();
+})();
