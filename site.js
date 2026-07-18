@@ -304,3 +304,9 @@ const news=document.createElement('section');news.id='actualite';news.className=
   visitorButton.onclick=()=>document.getElementById('commentAuthModal')?.classList.add('open');
   document.getElementById('languageHero')?.addEventListener('change',updateAccess);updateAccess();
 })();
+/* Bouton œil pour afficher ou masquer les mots de passe. */
+(() => {
+  document.head.insertAdjacentHTML('beforeend','<style>.password-wrap{position:relative}.password-wrap input{padding-right:48px!important}.password-visibility{position:absolute;right:7px;top:50%;transform:translateY(-50%);padding:5px 7px!important;background:transparent!important;color:#234238!important;font-size:18px!important;line-height:1}</style>');
+  function addEye(id){const input=document.getElementById(id);if(!input||input.dataset.eye)return;input.dataset.eye='true';const wrap=document.createElement('div');wrap.className='password-wrap';input.parentNode.insertBefore(wrap,input);wrap.append(input);const button=document.createElement('button');button.type='button';button.className='password-visibility';button.setAttribute('aria-label','Afficher le mot de passe');button.textContent='◉';button.onclick=()=>{const visible=input.type==='text';input.type=visible?'password':'text';button.textContent=visible?'◉':'◉̸';button.setAttribute('aria-label',visible?'Afficher le mot de passe':'Masquer le mot de passe')};wrap.append(button)}
+  addEye('securePassword');addEye('commentPassword');
+})();
