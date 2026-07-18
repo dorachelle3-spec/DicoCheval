@@ -383,3 +383,15 @@ const news=document.createElement('section');news.id='actualite';news.className=
     },220);
   });
 })();
+
+
+/* Ouvrir la page d'un membre depuis les suggestions. */
+(() => {
+  const box=document.getElementById('memberSearchResults');
+  if(!box)return;
+  box.addEventListener('click',event=>{
+    const card=event.target.closest('[data-member-name]');
+    if(!card)return;
+    location.href='membre.html?pseudo='+encodeURIComponent(card.dataset.memberName);
+  });
+})();
