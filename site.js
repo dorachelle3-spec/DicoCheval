@@ -357,3 +357,29 @@ const news=document.createElement('section');news.id='actualite';news.className=
   db.auth.getUser().then(({data})=>syncPublicProfile(data.user));
   db.auth.onAuthStateChange((_event,session)=>syncPublicProfile(session?.user));
 })();
+
+
+/* Suggestions pendant la recherche : membres. */
+(() => {
+  const db=window.supabase.createClient('https://mmxdlnfntpufwwkdvgzc.supabase.co','sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP');
+  const input=document.getElementById('find'),box=document.getElementById('memberSearchResults');
+  if(!input||!box)return;
+  const esc=v=>String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const en=()=>document.getElementById('languageHero')?.value==='en';
+  let timer;
+  input.addEventListener('input',()=>{
+    clearTimeout(timer);
+    const query=input.value.trim().replace(/[%_]/g,'');
+    if(!query){box.classList.remove('open');return}
+    timer=setTimeout(async()=>{
+      const {data,error}=await db.from('profils_publics').select('pseudo,avatar_url,points,membre_depuis').ilike('pseudo',query+'%').order('points',{ascending:false}).limit(6);
+      if(error||!data?.length)return;
+      const userLabel=en()?'User':'Utilisateur',sinceLabel=en()?'Member since ':'Membre depuis le ';
+      box.innerHTML='<div class="member-search-title">'+(en()?'Suggestions':'Suggestions')+'</div>'+data.map(p=>{
+        const joined=new Intl.DateTimeFormat(en()?'en-US':'fr-CA',{year:'numeric',month:'short',day:'numeric'}).format(new Date(p.membre_depuis));
+        return '<button type="button" class="member-search-card" data-member-name="'+esc(p.pseudo)+'"><img class="member-search-avatar" src="'+esc(p.avatar_url||'assets/avatar-0.png')+'" alt=""><span><b>'+esc(p.pseudo)+'</b> <small>· '+userLabel+'</small><br><span class="member-search-meta">'+p.points+' '+(en()?'points':'points')+' · '+sinceLabel+joined+'</span></span></button>';
+      }).join('');
+      box.classList.add('open');
+    },220);
+  });
+})();
