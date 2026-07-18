@@ -286,7 +286,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     await load();
   }
   async function sync(force=false){document.querySelectorAll('.news-card[data-article-id]').forEach(card=>{if(force===true)card.querySelector('.official-comments')?.remove();mount(card)})}
-  new MutationObserver(sync).observe(document.body,{childList:true,subtree:true});db.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));sync();
+  const newsListForComments=document.getElementById('newsList');if(newsListForComments)new MutationObserver(()=>sync()).observe(newsListForComments,{childList:true});db.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));sync();
 })();
 /* Accès rapides à côté de la recherche. */
 (() => {
