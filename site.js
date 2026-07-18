@@ -98,7 +98,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     if(!data?.length){list.innerHTML=`<p>${$('languageHero')?.value==='en'?'No news has been published yet.':'Aucune actualité publiée pour le moment.'}</p>`;$('newsToggle').hidden=true;return}
     const owner=await isOwner();
     const displayed=newsExpanded?data:data.slice(0,2);
-    list.innerHTML=displayed.map(a=>`<article class="news-card" data-article-id="${a.id}">${a.image_url?`<img class="news-image" src="${esc(a.image_url)}" alt="">`:''}<div class="news-copy"><p class="news-date">${$('languageHero')?.value==='en'?'Published':'Publié le'} ${dateText(a.publie_le)}</p><h3>${esc(a.titre)}</h3><p>${esc(a.contenu)}</p>${owner?`<div class="news-actions"><button class="btn" data-edit="${a.id}">Modifier</button><button class="btn danger" data-delete="${a.id}" data-image="${esc(a.image_url||'')}">Supprimer</button></div>`:''}</div></article>`).join('');
+    list.innerHTML=displayed.map(a=>`<article class="news-card" data-article-id="${a.id}">${a.image_url?`<img class="news-image" src="${esc(a.image_url)}" alt="">`:''}<div class="news-copy"><p class="news-date">${$('languageHero')?.value==='en'?'Published':'Publié le'} ${dateText(a.publie_le)}</p><h3>${esc(a.titre)}</h3><p>${esc(a.contenu.length>280?a.contenu.slice(0,280).trim()+"…":a.contenu)}</p><a class="btn news-more" href="article.html?id=${a.id}">Voir plus</a>${owner?`<div class="news-actions"><button class="btn" data-edit="${a.id}">Modifier</button><button class="btn danger" data-delete="${a.id}" data-image="${esc(a.image_url||'')}">Supprimer</button></div>`:''}</div></article>`).join('');
     const toggle=$('newsToggle');
     toggle.hidden=data.length<=2;
     toggle.textContent=newsExpanded?($('languageHero')?.value==='en'?'− Show fewer news':'− Voir moins d’actualités'):($('languageHero')?.value==='en'?'+ View all news':'+ Voir toutes les actualités');
@@ -278,7 +278,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     const initial=official?'D':String(comment.pseudo||'V').trim().charAt(0).toUpperCase();
     const avatar=`<span class="comment-avatar">${comment.avatar_url?`<img src="${esc(comment.avatar_url)}" alt="">`:''}<span>${initial}</span></span>`;
     const name=official?'<span class="official-badge">DicoCheval · Propriétaire</span>':`<b>${esc(comment.pseudo||'Visiteur')}</b>`;
-    const actions=(canEdit||canDelete||(current?.id===OWNER&&!depth))?`<div class="comment-actions">${canEdit?`<button class="btn" data-edit-comment="${comment.id}">Modifier</button>`:''}${canDelete?`<button class="btn danger" data-delete-comment="${comment.id}">Supprimer</button>`:''}${current?.id===OWNER&&!depth?`<button class="btn" data-reply-comment="${comment.id}">Répondre</button>`:''}</div>`:'';
+    const actions=(canEdit||canDelete||(current&&!depth))?`<div class="comment-actions">${canEdit?`<button class="btn" data-edit-comment="${comment.id}">Modifier</button>`:''}${canDelete?`<button class="btn danger" data-delete-comment="${comment.id}">Supprimer</button>`:''}${current&&!depth?`<a class="btn" href="discussion.html?comment=${comment.id}">Répondre</a>`:''}</div>`:'';
     return `<article class="comment ${depth?'reply':''}" data-comment="${comment.id}">${avatar}<div class="comment-main">${name} · <small>${formatDate(comment.cree_le)}</small><br><span class="comment-content">${esc(comment.contenu)}</span>${actions}</div></article>`
   }
   async function mount(card){
