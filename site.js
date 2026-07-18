@@ -111,3 +111,52 @@ const news=document.createElement('section');news.id='actualite';news.className=
   $('saveArticle').onclick=async()=>{if(!(await isOwner())){$('ownerInfo').textContent='Ta session a expiré. Reconnecte-toi.';return}const titre=$('articleTitle').value.trim(),contenu=$('articleText').value.trim(),file=$('articleImage').files[0];if(!titre||!contenu){$('editorStatus').textContent='Ajoute un titre et le texte de l’actualité.';return}if(file&&file.size>5*1024*1024){$('editorStatus').textContent='Cette image dépasse 5 Mo.';return}$('saveArticle').disabled=true;$('editorStatus').textContent='Enregistrement en cours…';let image_url;if(file){const ext=file.name.split('.').pop().toLowerCase(),path=`${crypto.randomUUID()}.${ext}`,{error:upError}=await db.storage.from('actualites').upload(path,file,{contentType:file.type});if(upError){$('editorStatus').textContent='Impossible d’envoyer l’image. Fais d’abord la configuration des images dans Supabase.';$('saveArticle').disabled=false;return}image_url=db.storage.from('actualites').getPublicUrl(path).data.publicUrl}const values={titre,contenu};if(image_url)values.image_url=image_url;const {error}=editingId?await db.from('actualites').update(values).eq('id',editingId):await db.from('actualites').insert(values);$('saveArticle').disabled=false;if(error){$('editorStatus').textContent='L’enregistrement a échoué.';return}$('secureOwnerModal').classList.remove('open');setEditor();renderNews()};
   function updateNewsLanguage(){const en=$('languageHero')?.value==='en';$('newsHeading').textContent=en?'News':'Actualités';$('newsIntro').textContent=en?'News from DicoCheval, published by its creator.':'Les nouvelles de DicoCheval, publiées par sa créatrice.';$('ownerButton').textContent=en?'Owner area':'Espace propriétaire';}$('languageHero')?.addEventListener('change',()=>{updateNewsLanguage();renderNews()});updateNewsLanguage();renderNews();
 })();
+
+/* Recherche visuelle : les mots trouvés sont surlignés dans le site. */
+(() => {
+  document.head.insertAdjacentHTML('beforeend', '<style>mark.search-hit{background:#ffe36e!important;color:#1d3529!important;padding:0 2px;border-radius:3px;box-shadow:0 0 0 2px rgba(255,227,110,.38)}</style>');
+  const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function clearSearchHighlights(){
+    document.querySelectorAll('mark.search-hit').forEach(mark => mark.replaceWith(document.createTextNode(mark.textContent)));
+    document.body.normalize();
+  }
+  window.findSite = function(){
+    const value = document.getElementById('find').value.trim();
+    clearSearchHighlights();
+    if(!value) return;
+    const expression = new RegExp(escapeRegExp(value), 'gi');
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const parent = node.parentElement;
+        if(!parent || /^(SCRIPT|STYLE|MARK|OPTION|TEXTAREA)$/i.test(parent.tagName)) return NodeFilter.FILTER_REJECT;
+        expression.lastIndex=0; return expression.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const nodes=[];
+    let node;
+    while((node=walker.nextNode())) nodes.push(node);
+    const results=[];
+    nodes.forEach(textNode => {
+      const fragment=document.createDocumentFragment();
+      const text=textNode.nodeValue;
+      let cursor=0;
+      expression.lastIndex=0;
+      let match;
+      while((match=expression.exec(text))){
+        fragment.append(document.createTextNode(text.slice(cursor,match.index)));
+        const mark=document.createElement('mark');
+        mark.className='search-hit';
+        mark.textContent=match[0];
+        fragment.append(mark);
+        results.push(mark);
+        cursor=match.index+match[0].length;
+      }
+      fragment.append(document.createTextNode(text.slice(cursor)));
+      textNode.replaceWith(fragment);
+    });
+    if(results.length){
+      results[0].scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  };
+  document.getElementById('find')?.addEventListener('keydown', event => { if(event.key==='Enter') window.findSite(); });
+})();
