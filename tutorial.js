@@ -1,0 +1,20 @@
+/* Tutoriel de découverte de DicoCheval. */
+(() => {
+  const steps=[
+    {target:'#accueil',title:'Bienvenue sur DicoCheval',text:'Ce petit guide te fait découvrir les endroits les plus utiles du site.'},
+    {target:'.search',title:'La recherche',text:'Écris un mot comme « race », « soins » ou « français ». Les résultats sont surlignés dans le site.'},
+    {target:'.nav',title:'Les sections',text:'Utilise cette barre pour aller rapidement aux races, disciplines, soins, équipement, anatomie, glossaire, métiers et quiz.'},
+    {target:'#topVisitorAccess',title:'Ton espace membre',text:'Connecte-toi ici pour commenter, gagner des points, choisir un avatar et ouvrir ta boîte de réception.'},
+    {target:'#actualite',title:'Les actualités',text:'Découvre les nouvelles de DicoCheval, réagis avec un cœur et participe aux commentaires.'},
+    {target:'#races',title:'Les races',text:'Clique sur une race pour consulter sa fiche. Les autres sections se découvrent de la même façon, en descendant la page.'},
+    {target:'#quiz',title:'À toi de jouer !',text:'Termine le parcours avec le quiz. Tu peux relancer ce tutoriel à tout moment avec le bouton « ? ».'}
+  ];
+  document.head.insertAdjacentHTML('beforeend','<style>.tutorial-layer{position:fixed;inset:0;background:rgba(18,42,31,.62);z-index:300;pointer-events:none}.tutorial-card{position:fixed;z-index:302;left:50%;bottom:22px;transform:translateX(-50%);width:min(520px,calc(100% - 32px));background:#fffdf8;color:#234238;border-radius:16px;padding:22px;box-shadow:0 14px 45px #0006}.tutorial-card h2{margin:0 0 8px;font:700 25px Georgia,serif}.tutorial-card p{margin:0 0 16px;line-height:1.5}.tutorial-controls{display:flex;gap:8px;justify-content:flex-end;align-items:center}.tutorial-controls button{font-size:13px}.tutorial-step{margin-right:auto;color:#63756a;font-size:12px}.tutorial-target{position:relative!important;z-index:301!important;outline:4px solid #ffd05f!important;outline-offset:5px;border-radius:6px}.tutorial-restart{position:fixed;right:18px;bottom:18px;z-index:90;border-radius:50%!important;width:42px;height:42px;padding:0!important;font-size:22px!important;box-shadow:0 3px 12px #0003}@media(max-width:520px){.tutorial-card{bottom:12px;padding:18px}}</style>');
+  let index=0,layer,card,current;
+  function finish(){localStorage.setItem('dicochevalTutorialDone','true');current?.classList.remove('tutorial-target');layer?.remove();card?.remove();layer=null;card=null;current=null}
+  function show(){const step=steps[index];current?.classList.remove('tutorial-target');current=document.querySelector(step.target);if(!current){index++;if(index<steps.length)show();else finish();return}current.classList.add('tutorial-target');current.scrollIntoView({behavior:'smooth',block:'center'});card.innerHTML=`<h2>${step.title}</h2><p>${step.text}</p><div class="tutorial-controls"><span class="tutorial-step">${index+1} / ${steps.length}</span><button class="btn" id="tutorialSkip">Passer</button>${index?'<button class="btn" id="tutorialBack">Retour</button>':''}<button class="btn" id="tutorialNext">${index===steps.length-1?'Terminer':'Suivant'}</button></div>`;document.getElementById('tutorialSkip').onclick=finish;document.getElementById('tutorialBack')?.addEventListener('click',()=>{index--;show()});document.getElementById('tutorialNext').onclick=()=>{if(index===steps.length-1)finish();else{index++;show()}}}
+  function start(){if(layer)return;index=0;layer=document.createElement('div');layer.className='tutorial-layer';card=document.createElement('aside');card.className='tutorial-card';document.body.append(layer,card);show()}
+  const restart=document.createElement('button');restart.type='button';restart.className='btn tutorial-restart';restart.title='Rejouer le tutoriel';restart.setAttribute('aria-label','Rejouer le tutoriel');restart.textContent='?';restart.onclick=start;document.body.append(restart);
+  window.startDicoChevalTutorial=start;
+  if(!localStorage.getItem('dicochevalTutorialDone'))setTimeout(start,700);
+})();
