@@ -320,3 +320,40 @@ const news=document.createElement('section');news.id='actualite';news.className=
   function addEye(id){const input=document.getElementById(id);if(!input||input.dataset.eye)return;input.dataset.eye='true';const wrap=document.createElement('div');wrap.className='password-wrap';input.parentNode.insertBefore(wrap,input);wrap.append(input);const button=document.createElement('button');button.type='button';button.className='password-visibility';button.setAttribute('aria-label','Afficher le mot de passe');button.textContent='◉';button.onclick=()=>{const visible=input.type==='text';input.type=visible?'password':'text';button.textContent=visible?'◉':'◉̸';button.setAttribute('aria-label',visible?'Afficher le mot de passe':'Masquer le mot de passe')};wrap.append(button)}
   addEye('securePassword');addEye('commentPassword');
 })();
+
+/* Recherche de membres : profils publics, sans e-mail. */
+(() => {
+  const db=window.supabase.createClient('https://mmxdlnfntpufwwkdvgzc.supabase.co','sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP');
+  const input=document.getElementById('find'),button=document.querySelector('.search button'),wrap=document.querySelector('.search .wrap');
+  if(!input||!button||!wrap)return;
+  document.head.insertAdjacentHTML('beforeend','<style>.member-search-results{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:80;display:none;background:#fffdf8;border:1px solid #cbd8ce;border-radius:10px;box-shadow:0 10px 28px #17352624;padding:8px}.member-search-results.open{display:block}.member-search-title{font-size:12px;font-weight:800;color:#52685d;padding:5px 7px}.member-search-card{display:flex;align-items:center;gap:10px;width:100%;background:transparent!important;color:#24362e!important;border:0!important;text-align:left;padding:9px 7px!important}.member-search-card:hover{background:#edf2ea!important}.member-search-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#dfe9df}.member-search-meta{font-size:12px;color:#63756a}.search .wrap{position:relative}</style>');
+  const results=document.createElement('div');results.id='memberSearchResults';results.className='member-search-results';wrap.append(results);
+  const esc=v=>String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const english=()=>document.getElementById('languageHero')?.value==='en';
+  const defaultAvatar='assets/avatar-0.png';
+  async function syncPublicProfile(user){
+    if(!user)return;
+    const m=user.user_metadata||{},last=Date.parse(m.points_last_at||user.created_at||new Date().toISOString()),points=Number(m.points||0)+Math.max(0,Math.floor((Date.now()-last)/60000));
+    await db.from('profils_publics').upsert({id:user.id,pseudo:user.id==='f22161e4-7528-4fd2-9860-a18be084b1f6'?'DicoCheval':(m.pseudo||'Visiteur'),avatar_url:m.avatar_url||defaultAvatar,points,membre_depuis:user.created_at},{onConflict:'id'});
+  }
+  async function searchMembers(){
+    const term=input.value.trim();
+    results.classList.remove('open');results.innerHTML='';
+    if(term.length<1)return;
+    const {data,error}=await db.from('profils_publics').select('pseudo,avatar_url,points,membre_depuis').ilike('pseudo',term.replace(/[%_]/g,'')+'%').order('points',{ascending:false}).limit(7);
+    if(error||!data?.length)return;
+    const title=english()?'Member profiles':'Profils de membres';
+    results.innerHTML='<div class="member-search-title">'+title+'</div>'+data.map(p=>{
+      const joined=new Intl.DateTimeFormat(english()?'en-US':'fr-CA',{year:'numeric',month:'long',day:'numeric'}).format(new Date(p.membre_depuis));
+      const labels=english()?(p.points+' points · Member since '+joined):(p.points+' point'+(p.points===1?'':'s')+' · Membre depuis le '+joined);
+      return '<button type="button" class="member-search-card"><img class="member-search-avatar" src="'+esc(p.avatar_url||defaultAvatar)+'" alt=""><span><b>'+esc(p.pseudo)+'</b><br><span class="member-search-meta">'+esc(labels)+'</span></span></button>';
+    }).join('');
+    results.classList.add('open');
+  }
+  const priorSearch=button.onclick;
+  button.onclick=event=>{priorSearch?.call(button,event);searchMembers()};
+  document.addEventListener('keydown',event=>{if(event.key==='Enter'&&document.activeElement===input)setTimeout(searchMembers,0)},true);
+  document.addEventListener('click',event=>{if(!wrap.contains(event.target))results.classList.remove('open')});
+  db.auth.getUser().then(({data})=>syncPublicProfile(data.user));
+  db.auth.onAuthStateChange((_event,session)=>syncPublicProfile(session?.user));
+})();
