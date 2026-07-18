@@ -120,7 +120,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     document.querySelectorAll('mark.search-hit').forEach(mark => mark.replaceWith(document.createTextNode(mark.textContent)));
     document.body.normalize();
   }
-  window.findSite = function(){
+  function highlightSiteSearch(){
     const value = document.getElementById('find').value.trim();
     clearSearchHighlights();
     if(!value) return;
@@ -157,6 +157,8 @@ const news=document.createElement('section');news.id='actualite';news.className=
     if(results.length){
       results[0].scrollIntoView({behavior:'smooth',block:'center'});
     }
-  };
-  document.getElementById('find')?.addEventListener('keydown', event => { if(event.key==='Enter') window.findSite(); });
+  }
+  const searchButton = document.querySelector('.search button');
+  if(searchButton) searchButton.onclick = highlightSiteSearch;
+  document.getElementById('find')?.addEventListener('keydown', event => { if(event.key==='Enter') highlightSiteSearch(); });
 })();
