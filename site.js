@@ -98,7 +98,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     if(!data?.length){list.innerHTML=`<p>${$('languageHero')?.value==='en'?'No news has been published yet.':'Aucune actualité publiée pour le moment.'}</p>`;$('newsToggle').hidden=true;return}
     const owner=await isOwner();
     const displayed=newsExpanded?data:data.slice(0,2);
-    list.innerHTML=displayed.map(a=>`<article class="news-card">${a.image_url?`<img class="news-image" src="${esc(a.image_url)}" alt="">`:''}<div class="news-copy"><p class="news-date">${$('languageHero')?.value==='en'?'Published':'Publié le'} ${dateText(a.publie_le)}</p><h3>${esc(a.titre)}</h3><p>${esc(a.contenu)}</p>${owner?`<div class="news-actions"><button class="btn" data-edit="${a.id}">Modifier</button><button class="btn danger" data-delete="${a.id}" data-image="${esc(a.image_url||'')}">Supprimer</button></div>`:''}</div></article>`).join('');
+    list.innerHTML=displayed.map(a=>`<article class="news-card" data-article-id="${a.id}">${a.image_url?`<img class="news-image" src="${esc(a.image_url)}" alt="">`:''}<div class="news-copy"><p class="news-date">${$('languageHero')?.value==='en'?'Published':'Publié le'} ${dateText(a.publie_le)}</p><h3>${esc(a.titre)}</h3><p>${esc(a.contenu)}</p>${owner?`<div class="news-actions"><button class="btn" data-edit="${a.id}">Modifier</button><button class="btn danger" data-delete="${a.id}" data-image="${esc(a.image_url||'')}">Supprimer</button></div>`:''}</div></article>`).join('');
     const toggle=$('newsToggle');
     toggle.hidden=data.length<=2;
     toggle.textContent=newsExpanded?($('languageHero')?.value==='en'?'− Show fewer news':'− Voir moins d’actualités'):($('languageHero')?.value==='en'?'+ View all news':'+ Voir toutes les actualités');
@@ -161,4 +161,93 @@ const news=document.createElement('section');news.id='actualite';news.className=
   const searchButton = document.querySelector('.search button');
   if(searchButton) searchButton.onclick = highlightSiteSearch;
   document.getElementById('find')?.addEventListener('keydown', event => { if(event.key==='Enter') highlightSiteSearch(); });
+})();
+
+/* Améliorations d’interface : identité, quiz et recherche. */
+(() => {
+  document.querySelector('.top')?.remove();
+  const footer=document.querySelector('.footer .wrap');
+  if(footer) footer.textContent='Créé fièrement par Rachelle Do';
+
+  let quizTimer;
+  function quizInEnglish(){return document.getElementById('languageHero')?.value==='en'}
+  function activeQuestions(){return quizInEnglish()&&typeof enQuiz!=='undefined'?enQuiz:qs}
+  function drawFriendlyQuiz(){
+    clearTimeout(quizTimer);
+    const questions=activeQuestions();
+    const question=questions[qi%questions.length];
+    document.getElementById('qn').textContent=(qi%questions.length)+1;
+    document.getElementById('question').textContent=question[0];
+    document.getElementById('result').textContent='';
+    document.getElementById('answers').innerHTML=question[1].map((choice,index)=>`<button data-choice="${index}">${choice}</button>`).join('');
+    document.querySelectorAll('#answers button').forEach(button=>button.onclick=()=>{
+      const choice=question[1][Number(button.dataset.choice)];
+      if(choice===question[2]){
+        document.getElementById('result').textContent=quizInEnglish()?'✓ Well done, you got it!':'✓ Bravo, tu as réussi !';
+        document.querySelectorAll('#answers button').forEach(item=>item.disabled=true);
+        quizTimer=setTimeout(()=>{qi=(qi+1)%questions.length;drawFriendlyQuiz()},2000);
+      }else{
+        document.getElementById('result').textContent=quizInEnglish()?'Try again!':'Réessaie !';
+      }
+    });
+  }
+  window.drawQ=drawFriendlyQuiz;
+  window.nextQ=()=>{qi=(qi+1)%activeQuestions().length;drawFriendlyQuiz()};
+  const nextButton=document.querySelector('#quiz > .wrap > div > button');
+  if(nextButton) nextButton.hidden=true;
+  const restart=document.createElement('button');
+  restart.className='btn'; restart.id='restartQuiz';
+  restart.textContent='Recommencer le quiz';
+  restart.onclick=()=>{qi=0;drawFriendlyQuiz()};
+  nextButton?.after(restart);
+  document.getElementById('languageHero')?.addEventListener('change',()=>{restart.textContent=quizInEnglish()?'Restart quiz':'Recommencer le quiz';drawFriendlyQuiz()});
+  drawFriendlyQuiz();
+
+  document.head.insertAdjacentHTML('beforeend','<style>.search-status{font-size:12px;font-weight:700;color:#214a9a;align-self:center;white-space:nowrap}.search-hit{scroll-margin-top:110px}</style>');
+  const searchInput=document.getElementById('find');
+  const searchButton=document.querySelector('.search button');
+  const status=document.createElement('span'); status.className='search-status'; status.id='searchStatus';
+  document.querySelector('.search .wrap')?.append(status);
+  const normalize=value=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const escapeRegex=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const distance=(a,b)=>{const row=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let previous=row[0];row[0]=i;for(let j=1;j<=b.length;j++){const saved=row[j];row[j]=Math.min(row[j]+1,row[j-1]+1,previous+(a[i-1]===b[j-1]?0:1));previous=saved}}return row[b.length]};
+  function clearMarks(){document.querySelectorAll('mark.search-hit').forEach(mark=>mark.replaceWith(document.createTextNode(mark.textContent)));document.body.normalize()}
+  function highlightRanges(node,ranges,marks){const fragment=document.createDocumentFragment();let cursor=0;ranges.forEach(range=>{fragment.append(document.createTextNode(node.nodeValue.slice(cursor,range.start)));const mark=document.createElement('mark');mark.className='search-hit';mark.textContent=node.nodeValue.slice(range.start,range.end);fragment.append(mark);marks.push(mark);cursor=range.end});fragment.append(document.createTextNode(node.nodeValue.slice(cursor)));node.replaceWith(fragment)}
+  function smartSearch(){
+    const raw=searchInput?.value.trim()||''; clearMarks(); status.textContent=''; if(!raw)return;
+    const exact=new RegExp(escapeRegex(raw),'gi'); const nodes=[];
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode(node){const parent=node.parentElement;if(!parent||/^(SCRIPT|STYLE|MARK|OPTION|TEXTAREA|BUTTON)$/i.test(parent.tagName))return NodeFilter.FILTER_REJECT;exact.lastIndex=0;return exact.test(node.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}});
+    let node;while((node=walker.nextNode()))nodes.push(node);
+    const marks=[];
+    nodes.forEach(textNode=>{const ranges=[];exact.lastIndex=0;let match;while((match=exact.exec(textNode.nodeValue)))ranges.push({start:match.index,end:match.index+match[0].length});highlightRanges(textNode,ranges,marks)});
+    let approximate=false;
+    if(!marks.length&&normalize(raw).length>2){
+      const target=normalize(raw);const all=[];const fuzzyWalker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode(node){const p=node.parentElement;return !p||/^(SCRIPT|STYLE|MARK|OPTION|TEXTAREA|BUTTON)$/i.test(p.tagName)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}});
+      while((node=fuzzyWalker.nextNode()))all.push(node);
+      all.forEach(textNode=>{const ranges=[];const words=[...textNode.nodeValue.matchAll(/\p{L}+/gu)];words.forEach(word=>{const candidate=normalize(word[0]);const allowed=target.length>=7?2:1;if(Math.abs(candidate.length-target.length)<=allowed&&distance(candidate,target)<=allowed)ranges.push({start:word.index,end:word.index+word[0].length})});if(ranges.length)highlightRanges(textNode,ranges,marks)});
+      approximate=marks.length>0;
+    }
+    if(marks.length){status.textContent=approximate?(quizInEnglish()?`Closest matches: ${marks.length}`:`Résultats approchés : ${marks.length}`):(quizInEnglish()?`${marks.length} result(s) highlighted`:`${marks.length} résultat(s) surligné(s)`);marks[0].scrollIntoView({behavior:'smooth',block:'center'})}else status.textContent=quizInEnglish()?'No matching result':'Aucun résultat trouvé';
+  }
+  if(searchButton)searchButton.onclick=smartSearch;
+  searchInput?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();event.stopImmediatePropagation();smartSearch()}},true);
+})();
+
+/* Commentaires publics reliés aux actualités Supabase. */
+(() => {
+  const commentsDb=window.supabase.createClient('https://mmxdlnfntpufwwkdvgzc.supabase.co','sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP');
+  const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
+  document.head.insertAdjacentHTML('beforeend','<style>.comments{border-top:1px solid #e1e7e2;padding:18px 25px 22px}.comments h4{margin:0 0 12px;color:#234238}.comment-list{display:grid;gap:9px;margin-bottom:14px}.comment{background:#f7f5ef;border-radius:8px;padding:10px 12px;font-size:14px}.comment b{color:#234238}.comment-form{display:grid;gap:8px}.comment-form input,.comment-form textarea{font:14px Arial;padding:9px;border:1px solid #cbd8ce;border-radius:6px}.comment-form textarea{min-height:72px;resize:vertical}.comment-form button{justify-self:start;font-size:13px}.comment-info{font-size:12px;color:#63756a;margin:0}</style>');
+  const formatCommentDate=value=>new Intl.DateTimeFormat(document.getElementById('languageHero')?.value==='en'?'en-US':'fr-CA',{day:'numeric',month:'short',year:'numeric'}).format(new Date(value));
+  async function mountComments(card){
+    if(card.querySelector('.comments'))return;
+    const articleId=card.dataset.articleId;if(!articleId)return;
+    const box=document.createElement('section');box.className='comments';box.innerHTML=`<h4>Commentaires</h4><div class="comment-list"><p class="comment-info">Chargement…</p></div><form class="comment-form"><input maxlength="40" placeholder="Pseudo (facultatif)"><textarea maxlength="500" required placeholder="Écrire un commentaire…"></textarea><button class="btn" type="submit">Commenter</button><p class="comment-info"></p></form>`;card.append(box);
+    const list=box.querySelector('.comment-list');
+    async function load(){const {data,error}=await commentsDb.from('commentaires').select('*').eq('actualite_id',articleId).order('cree_le',{ascending:true});if(error){list.innerHTML='<p class="comment-info">Les commentaires seront bientôt disponibles.</p>';return}list.innerHTML=data?.length?data.map(comment=>`<article class="comment"><b>${escapeHtml(comment.pseudo||'Anonyme')}</b> · <small>${formatCommentDate(comment.cree_le)}</small><br>${escapeHtml(comment.contenu)}</article>`).join(''):'<p class="comment-info">Aucun commentaire pour le moment.</p>'}
+    box.querySelector('form').onsubmit=async event=>{event.preventDefault();const [pseudo,contenu]=event.currentTarget.querySelectorAll('input,textarea');const info=event.currentTarget.querySelector('.comment-info');if(!contenu.value.trim())return;info.textContent='Publication…';const {error}=await commentsDb.from('commentaires').insert({actualite_id:articleId,pseudo:pseudo.value.trim()||'Anonyme',contenu:contenu.value.trim()});if(error){info.textContent='Impossible de publier ce commentaire pour le moment.';return}pseudo.value='';contenu.value='';info.textContent='Commentaire publié !';load()};
+    load();
+  }
+  const observe=()=>document.querySelectorAll('.news-card[data-article-id]').forEach(mountComments);
+  new MutationObserver(observe).observe(document.body,{childList:true,subtree:true});observe();
 })();
