@@ -255,8 +255,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     box.querySelector('form').onsubmit=async event=>{event.preventDefault();const [pseudo,contenu]=event.currentTarget.querySelectorAll('input,textarea');const info=event.currentTarget.querySelector('.comment-info');if(!contenu.value.trim())return;info.textContent='Publication…';const {error}=await commentsDb.from('commentaires').insert({actualite_id:articleId,pseudo:pseudo.value.trim()||'Anonyme',contenu:contenu.value.trim()});if(error){info.textContent='Impossible de publier ce commentaire pour le moment.';return}pseudo.value='';contenu.value='';info.textContent='Commentaire publié !';load()};
     load();
   }
-  const observe=()=>document.querySelectorAll('.news-card[data-article-id]').forEach(mountComments);
-  new MutationObserver(observe).observe(document.body,{childList:true,subtree:true});observe();
+  /* Ancienne version des commentaires désactivée : la version sécurisée ci-dessous est utilisée. */
 })();
 /* Commentaires avec comptes visiteurs et réponses officielles. */
 (() => {
