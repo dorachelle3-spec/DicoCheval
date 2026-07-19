@@ -395,3 +395,20 @@ const news=document.createElement('section');news.id='actualite';news.className=
     location.href='membre.html?pseudo='+encodeURIComponent(card.dataset.memberName);
   });
 })();
+
+
+/* Bouton de communauté Discord. */
+(() => {
+  const language=document.getElementById('languageHero');
+  if(!language||document.getElementById('communityButton'))return;
+  const button=document.createElement('a');
+  button.id='communityButton';
+  button.className='btn community-button';
+  button.href='https://discord.gg/wVpQHHZUE7';
+  button.target='_blank';
+  button.rel='noopener noreferrer';
+  language.insertAdjacentElement('afterend',button);
+  const label=()=>button.textContent=language.value==='en'?'Join the community':'Rejoindre la communauté';
+  language.addEventListener('change',label);label();
+  document.head.insertAdjacentHTML('beforeend','<style>.community-button{margin-left:10px;background:transparent!important;border:1px solid #fff!important;text-decoration:none;display:inline-block}.community-button:hover{background:#fff!important;color:#234238!important}@media(max-width:500px){.community-button{margin:10px 0 0;display:block;width:max-content}}</style>');
+})();
