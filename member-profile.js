@@ -94,3 +94,19 @@
   }
   new MutationObserver(add).observe(document.body,{childList:true,subtree:true});add();
 })();
+
+
+/* Boîte de réception : suppression immédiate et affichage Safari. */
+(() => {
+  const db=window.supabase.createClient('https://mmxdlnfntpufwwkdvgzc.supabase.co','sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP');
+  document.head.insertAdjacentHTML('beforeend','<style>.member-modal{align-items:flex-start!important;overflow-y:auto;-webkit-overflow-scrolling:touch}.member-box{margin:20px auto;max-height:calc(100vh - 40px)!important;max-height:calc(100dvh - 40px)!important;-webkit-overflow-scrolling:touch;overflow-y:auto!important;overflow-x:hidden}.member-notification{overflow-wrap:anywhere;word-break:break-word}.member-inbox{min-width:0}</style>');
+  const checkbox=document.getElementById('memberAutoDelete');
+  if(!checkbox)return;
+  checkbox.addEventListener('change',async()=>{
+    const {data:{user}}=await db.auth.getUser();if(!user)return;
+    await db.auth.updateUser({data:{auto_delete_notifications:checkbox.checked}});
+    if(!checkbox.checked)return;
+    const {error}=await db.from('notifications').delete().eq('destinataire_id',user.id).eq('lu',false);
+    if(!error){const area=document.getElementById('memberNotifications');if(area)area.innerHTML='<p class="member-status">Aucune notification pour le moment.</p>';const badge=document.querySelector('.notification-badge');badge?.remove()}
+  });
+})();
