@@ -412,3 +412,15 @@ const news=document.createElement('section');news.id='actualite';news.className=
   language.addEventListener('change',label);label();
   document.head.insertAdjacentHTML('beforeend','<style>.community-button{margin-left:10px;background:transparent!important;border:1px solid #fff!important;text-decoration:none;display:inline-block}.community-button:hover{background:#fff!important;color:#234238!important}@media(max-width:500px){.community-button{margin:10px 0 0;display:block;width:max-content}}</style>');
 })();
+
+
+/* Accès au profil depuis l'avatar d'un commentaire. */
+(() => {
+  document.addEventListener('click',event=>{
+    const avatar=event.target.closest('.comment-avatar');
+    if(!avatar)return;
+    const comment=avatar.closest('.comment');
+    const name=comment?.querySelector('b')?.textContent?.trim()||(comment?.querySelector('.official-badge')?'DicoCheval':'');
+    if(name)location.href='membre.html?pseudo='+encodeURIComponent(name);
+  });
+})();
