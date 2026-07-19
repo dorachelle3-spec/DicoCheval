@@ -63,8 +63,8 @@
 (() => {
   const db=window.supabase.createClient('https://mmxdlnfntpufwwkdvgzc.supabase.co','sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP');
   const owner='f22161e4-7528-4fd2-9860-a18be084b1f6';
-  const colors=[['#fafaf6','Classique'],['#f1ecfa','Lavande'],['#e9f4fb','Bleu doux'],['#fff0f5','Rose doux'],['#edf5ea','Vert sauge']];
-  document.head.insertAdjacentHTML('beforeend','<style>body{background:var(--member-background,#fafaf6)!important}.member-background{border-top:1px solid #dde7dd;margin-top:20px;padding-top:16px}.background-colors{display:flex;gap:8px;flex-wrap:wrap}.background-color{width:42px;height:42px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #b9cbbb;cursor:pointer}.background-color.selected{box-shadow:0 0 0 3px #b58a4b}.background-color:disabled{opacity:.45;cursor:not-allowed}</style>');
+  const colors=[['#fafaf6','Classique'],['#ffffff','Blanc'],['#f1ecfa','Lavande'],['#e6dcff','Violet'],['#e9f4fb','Bleu doux'],['#d8f0ff','Bleu ciel'],['#dff7f2','Turquoise'],['#edf5ea','Vert sauge'],['#e0f4d7','Vert tendre'],['#fff8d7','Jaune doux'],['#ffe9c9','Pêche'],['#fff0f5','Rose doux'],['#ffe0ec','Rose bonbon'],['#f5e6d3','Sable'],['#eeeeee','Gris clair']];
+  document.head.insertAdjacentHTML('beforeend','<style>body{background:var(--member-background,#fafaf6)!important}body .section:not(.hero){background:var(--member-background,#fafaf6)!important}.member-background{border-top:1px solid #dde7dd;margin-top:20px;padding-top:16px}.background-colors{display:flex;gap:8px;flex-wrap:wrap}.background-color{width:42px;height:42px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #b9cbbb;cursor:pointer}.background-color.selected{box-shadow:0 0 0 3px #b58a4b}.background-color:disabled{opacity:.45;cursor:not-allowed}.background-picker{width:42px;height:42px;padding:0;border:0;border-radius:50%;overflow:hidden;cursor:pointer;background:transparent!important}</style>');
   const apply=color=>document.documentElement.style.setProperty('--member-background',color||'#fafaf6');
   async function open(){
     const result=await db.auth.getUser(),user=result.data.user;if(!user)return;
@@ -74,9 +74,23 @@
     const section=document.createElement('section');section.id='memberBackground';section.className='member-background';
     section.innerHTML='<h3>Mon fond de site</h3><p class="member-status">'+(unlocked?'Choisis une couleur visible seulement pour toi.':'Atteins 300 points pour personnaliser le fond du site.')+'</p><div class="background-colors"></div>';
     const group=section.querySelector('.background-colors');
-    colors.forEach(item=>{const color=item[0],label=item[1],b=document.createElement('button');b.type='button';b.className='background-color '+((p.site_background||'#fafaf6')===color?'selected':'');b.title=label;b.style.background=color;b.disabled=!unlocked;b.onclick=async()=>{apply(color);group.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');await db.auth.updateUser({data:{site_background:color}})};group.append(b)});
+    colors.forEach(item=>{const color=item[0],label=item[1],b=document.createElement('button');b.type='button';b.className='background-color '+((p.site_background||'#fafaf6')===color?'selected':'');b.title=label;b.style.setProperty('background',color,'important');b.disabled=!unlocked;b.onclick=async()=>{apply(color);group.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');await db.auth.updateUser({data:{site_background:color}})};group.append(b)});
     inbox.before(section);
   }
   db.auth.getUser().then(result=>apply(result.data.user?.user_metadata?.site_background||'#fafaf6'));
   new MutationObserver(open).observe(document.body,{childList:true,subtree:true});open();
+})();
+
+/* Sélecteur de couleur libre pour le fond personnel. */
+(() => {
+  const db=window.supabase.createClient('https://mmxdlnfntpufwwkdvgzc.supabase.co','sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP');
+  function add(){
+    const group=document.querySelector('#memberBackground .background-colors');
+    if(!group||group.querySelector('.background-picker'))return;
+    const picker=document.createElement('input');picker.type='color';picker.className='background-picker';picker.title='Choisir une couleur personnalisée';
+    db.auth.getUser().then(({data})=>{const user=data.user,background=user?.user_metadata?.site_background||'#fafaf6',last=Date.parse(user?.user_metadata?.points_last_at||user?.created_at||Date.now()),points=Number(user?.user_metadata?.points||0)+Math.max(0,Math.floor((Date.now()-last)/60000));picker.value=/^#[0-9a-fA-F]{6}$/.test(background)?background:'#fafaf6';picker.disabled=!(user?.id==='f22161e4-7528-4fd2-9860-a18be084b1f6'||points>=300)});
+    picker.oninput=async()=>{const color=picker.value;document.documentElement.style.setProperty('--member-background',color);group.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));await db.auth.updateUser({data:{site_background:color}})};
+    group.append(picker);
+  }
+  new MutationObserver(add).observe(document.body,{childList:true,subtree:true});add();
 })();
