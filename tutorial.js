@@ -4,7 +4,7 @@
     {target:'#accueil',title:'Bienvenue sur DicoCheval',text:'Ce petit guide te fait découvrir les endroits les plus utiles du site.'},
     {target:'.search',title:'La recherche',text:'Écris un mot comme « race », « soins » ou « français ». Les résultats sont surlignés dans le site.'},
     {target:'.nav',title:'Les sections',text:'Utilise cette barre pour aller rapidement aux races, disciplines, soins, équipement, anatomie, glossaire, métiers et quiz.'},
-    {target:'#topVisitorAccess',title:'Ton espace membre',text:'Connecte-toi ici pour commenter, gagner des points, choisir un avatar et ouvrir ta boîte de réception.'},
+    {target:'#topVisitorAccess',title:'Ton espace membre',text:'Connecte-toi ici pour commenter, choisir un avatar et ouvrir ta boîte de réception. Les points ne montent que pendant une activité réelle : la page doit être visible et tu dois être actif·ve, pas seulement la laisser ouverte en arrière-plan.'},
     {target:'#actualite',title:'Les actualités',text:'Découvre les nouvelles de DicoCheval, réagis avec un cœur et participe aux commentaires.'},
     {target:'#races',title:'Les races',text:'Clique sur une race pour consulter sa fiche. Les autres sections se découvrent de la même façon, en descendant la page.'},
     {target:'#quiz',title:'À toi de jouer !',text:'Termine le parcours avec le quiz. Tu peux relancer ce tutoriel à tout moment avec le bouton « ? ».'}
