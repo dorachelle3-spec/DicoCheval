@@ -333,20 +333,20 @@ const news=document.createElement('section');news.id='actualite';news.className=
   const defaultAvatar='assets/avatar-0.png';
   async function syncPublicProfile(user){
     if(!user)return;
-    const m=user.user_metadata||{},last=Date.parse(m.points_last_at||user.created_at||new Date().toISOString()),points=Number(m.points||0)+Math.max(0,Math.floor((Date.now()-last)/60000));
-    await db.from('profils_publics').upsert({id:user.id,pseudo:user.id==='f22161e4-7528-4fd2-9860-a18be084b1f6'?'DicoCheval':(m.pseudo||'Visiteur'),avatar_url:m.avatar_url||defaultAvatar,points,membre_depuis:user.created_at},{onConflict:'id'});
+    const m=user.user_metadata||{},points=Number(m.points||0);
+    await db.from('profils_publics').upsert({id:user.id,pseudo:user.id==='f22161e4-7528-4fd2-9860-a18be084b1f6'?'DicoCheval':(m.pseudo||'Visiteur'),avatar_url:m.avatar_url||defaultAvatar,points,badges:Array.isArray(m.badges)?m.badges:[],membre_depuis:user.created_at},{onConflict:'id'});
   }
   async function searchMembers(){
     const term=input.value.trim();
     results.classList.remove('open');results.innerHTML='';
     if(term.length<1)return;
-    const {data,error}=await db.from('profils_publics').select('pseudo,avatar_url,points,membre_depuis').ilike('pseudo',term.replace(/[%_]/g,'')+'%').order('points',{ascending:false}).limit(7);
+    const {data,error}=await db.from('profils_publics').select('pseudo,avatar_url,points,membre_depuis,badges').ilike('pseudo',term.replace(/[%_]/g,'')+'%').order('points',{ascending:false}).limit(7);
     if(error||!data?.length)return;
     const title=english()?'Member profiles':'Profils de membres';
     results.innerHTML='<div class="member-search-title">'+title+'</div>'+data.map(p=>{
       const joined=new Intl.DateTimeFormat(english()?'en-US':'fr-CA',{year:'numeric',month:'long',day:'numeric'}).format(new Date(p.membre_depuis));
       const labels=english()?(p.points+' points · Member since '+joined):(p.points+' point'+(p.points===1?'':'s')+' · Membre depuis le '+joined);
-      return '<button type="button" class="member-search-card"><img class="member-search-avatar" src="'+esc(p.avatar_url||defaultAvatar)+'" alt=""><span><b>'+esc(p.pseudo)+'</b><br><span class="member-search-meta">'+esc(labels)+'</span></span></button>';
+      return '<button type="button" class="member-search-card" data-member-name="'+esc(p.pseudo)+'"><img class="member-search-avatar" src="'+esc(p.avatar_url||defaultAvatar)+'" alt=""><span><b>'+esc(p.pseudo)+'</b><br><span class="member-search-meta">'+esc(labels)+'</span></span></button>';
     }).join('');
     results.classList.add('open');
   }
@@ -372,7 +372,7 @@ const news=document.createElement('section');news.id='actualite';news.className=
     const query=input.value.trim().replace(/[%_]/g,'');
     if(!query){box.classList.remove('open');return}
     timer=setTimeout(async()=>{
-      const {data,error}=await db.from('profils_publics').select('pseudo,avatar_url,points,membre_depuis').ilike('pseudo',query+'%').order('points',{ascending:false}).limit(6);
+      const {data,error}=await db.from('profils_publics').select('pseudo,avatar_url,points,membre_depuis,badges').ilike('pseudo',query+'%').order('points',{ascending:false}).limit(6);
       if(error||!data?.length)return;
       const userLabel=en()?'User':'Utilisateur',sinceLabel=en()?'Member since ':'Membre depuis le ';
       box.innerHTML='<div class="member-search-title">'+(en()?'Suggestions':'Suggestions')+'</div>'+data.map(p=>{
