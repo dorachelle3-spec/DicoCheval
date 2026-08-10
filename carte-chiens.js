@@ -1,14 +1,14 @@
 (() => {
   const countries={
-    'Royaume-Uni':[[54,-2.5],['Welsh Corgi Pembroke','Labrador Retriever','Golden Retriever','Beagle','Border Collie','Cavalier King Charles Spaniel','Jack Russell Terrier','Cocker anglais','Otterhound']],
-    'Allemagne':[[51.1,10.4],['Berger allemand','Rottweiler','Dobermann','Teckel standard','Eurasier']],
-    'France':[[46.3,2.2],['Bouledogue français','Caniche standard']],
+    'Royaume-Uni':[[54,-2.5],['Welsh Corgi Pembroke','Welsh Corgi Cardigan','Whippet','Labrador Retriever','Golden Retriever','Beagle','Border Collie','Cavalier King Charles Spaniel','Jack Russell Terrier','Cocker anglais','Otterhound']],
+    'Allemagne':[[51.1,10.4],['Berger allemand','Rottweiler','Dobermann','Teckel standard','Eurasier','Schnauzer nain']],
+    'France':[[46.3,2.2],['Bouledogue français','Caniche standard','Basset Hound','Bichon frisé','Épagneul nain continental Papillon']],
     'États-Unis':[[39,-98],['Berger australien','Chinook']],
     'Canada':[[56,-106],['Terre-Neuve']],
     'Suisse':[[46.8,8.2],['Bouvier bernois']],
-    'Russie':[[61,90],['Husky sibérien']],
+    'Russie':[[61,90],['Husky sibérien','Samoyède']],
     'Mexique':[[23.6,-102.5],['Chihuahua','Xoloitzcuintle moyen']],
-    'Japon':[[36.2,138.2],['Akita','Kai Ken']],
+    'Japon':[[36.2,138.2],['Akita','Kai Ken','Shiba Inu']],
     'Hongrie':[[47.1,19.5],['Mudi','Pumi']],
     'Italie':[[42.8,12.5],['Lagotto Romagnolo']],
     'Finlande':[[64,26],['Chien finnois de Laponie']],
@@ -21,6 +21,7 @@
     'Afrique centrale':[[1,22],['Basenji']],
     'Chine':[[35.8,104],['Shih Tzu']],
     'Croatie':[[45.1,15.2],['Dalmatien']],
+    'Malte':[[35.9,14.4],['Bichon maltais']],
     'Belgique':[[50.6,4.7],['Berger belge malinois','Schipperke']],
     'Écosse':[[57,-4],['Golden Retriever','Border Collie']]
   };
