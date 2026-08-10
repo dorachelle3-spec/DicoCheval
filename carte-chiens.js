@@ -1,6 +1,6 @@
 (() => {
   const countries={
-    'Royaume-Uni':[[54,-2.5],['Labrador Retriever','Golden Retriever','Beagle','Border Collie','Cavalier King Charles Spaniel','Jack Russell Terrier','Cocker anglais','Otterhound']],
+    'Royaume-Uni':[[54,-2.5],['Welsh Corgi Pembroke','Labrador Retriever','Golden Retriever','Beagle','Border Collie','Cavalier King Charles Spaniel','Jack Russell Terrier','Cocker anglais','Otterhound']],
     'Allemagne':[[51.1,10.4],['Berger allemand','Rottweiler','Dobermann','Teckel standard','Eurasier']],
     'France':[[46.3,2.2],['Bouledogue français','Caniche standard']],
     'États-Unis':[[39,-98],['Berger australien','Chinook']],
@@ -30,6 +30,7 @@
   Object.entries(countries).forEach(([country,[coords,breeds]])=>L.marker(coords,{icon,title:country}).addTo(map).bindTooltip(country,{direction:'top'}).on('click',()=>{
     document.getElementById('countryTitle').textContent=country;
     document.getElementById('countryIntro').textContent=breeds.length+' race'+(breeds.length>1?'s':'')+' à découvrir.';
-    document.getElementById('countryBreeds').innerHTML=breeds.map(name=>'<a href="dicochien.html?breed='+encodeURIComponent(name)+'">'+name+' →</a>').join('');
+    document.getElementById('countryBreeds').innerHTML=breeds.map(name=>'<a href="dicochien.html?section=races&breed='+encodeURIComponent(name)+'">'+name+' →</a>').join('');
   }));
+  const layout=document.createElement('style');layout.textContent='@media(min-width:900px){body{height:100vh;overflow:hidden}main.wrap{height:calc(100vh - 64px);display:grid;grid-template-columns:minmax(0,1fr) 330px;grid-template-rows:auto minmax(0,1fr);gap:18px;padding-bottom:22px}.hero{grid-column:1/-1;padding:24px 0 4px}.hero h1{font-size:clamp(38px,5vw,58px)}.hero p{margin:8px 0}.map{height:100%;min-height:430px}.result{margin:0;overflow:auto}}';document.head.appendChild(layout);
 })();

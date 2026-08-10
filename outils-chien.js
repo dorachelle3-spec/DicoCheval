@@ -31,3 +31,54 @@
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l=>$('nameLetter').insertAdjacentHTML('beforeend','<option>'+l+'</option>'));
   function makeNames(){const letter=$('nameLetter').value;let pool=names[$('nameTheme').value].split(',');if(letter)pool=pool.filter(n=>n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().startsWith(letter));$('nameResults').innerHTML=(pool.length?pool:['Aucun nom pour cette lettre']).map(n=>'<span>'+n+'</span>').join('')}$('nameGenerate').onclick=makeNames;makeNames();
 })();
+
+(() => {
+  const $=id=>document.getElementById(id);
+  const dogs=[
+    ['Welsh Corgi Pembroke','small','high',75,'some',true,'medium','family',['apartment','house','land']],
+    ['Labrador Retriever','large','high',100,'beginner',true,'medium','family',['house','land']],
+    ['Golden Retriever','large','high',105,'beginner',true,'high','family',['house','land']],
+    ['Caniche standard','large','high',90,'some',true,'high','sport',['apartment','house','land']],
+    ['Cavalier King Charles Spaniel','small','low',45,'beginner',true,'medium','family',['apartment','house']],
+    ['Shih Tzu','small','low',40,'beginner',true,'high','family',['apartment','house']],
+    ['Bouledogue français','small','low',40,'beginner',true,'low','family',['apartment','house']],
+    ['Chihuahua','small','low',35,'some',false,'low','independent',['apartment','house']],
+    ['Terrier tchèque','small','medium',60,'some',true,'medium','family',['apartment','house']],
+    ['Jack Russell Terrier','small','high',90,'advanced',false,'low','sport',['house','land']],
+    ['Beagle','medium','high',90,'some',true,'low','independent',['house','land']],
+    ['Border Collie','medium','high',150,'advanced',false,'medium','sport',['land']],
+    ['Berger australien','medium','high',130,'some',true,'medium','sport',['house','land']],
+    ['Chien finnois de Laponie','medium','medium',90,'some',true,'high','family',['house','land']],
+    ['Lagotto Romagnolo','medium','high',100,'some',true,'high','sport',['house','land']],
+    ['Basenji','medium','high',90,'advanced',false,'low','independent',['apartment','house']],
+    ['Eurasier','large','medium',75,'some',true,'high','family',['house','land']],
+    ['Boxer','large','high',90,'some',true,'low','sport',['house','land']],
+    ['Husky sibérien','large','high',140,'advanced',false,'high','independent',['land']],
+    ['Terre-Neuve','large','medium',75,'some',true,'high','family',['house','land']]
+  ].map(([name,size,activity,time,experience,children,groom,style,homes])=>({name,size,activity,time,experience,children,groom,style,homes}));
+  const rank={low:1,medium:2,high:3,beginner:1,some:2,advanced:3};
+  const ids=['idealHome','idealActivity','idealTime','idealExperience','idealChildren','idealSize','idealGroom','idealStyle'];
+  const complete=()=>ids.every(id=>$(id)?.value);
+  function recommend(){
+    if(!complete()){$('idealResult').className='result open';$('idealResult').textContent='Tu n’as pas rempli toutes les informations.';return;}
+    const v={home:$('idealHome').value,activity:$('idealActivity').value,time:+$('idealTime').value,experience:$('idealExperience').value,children:$('idealChildren').value,size:$('idealSize').value,groom:$('idealGroom').value,style:$('idealStyle').value};
+    const results=dogs.map(d=>{let score=0,reasons=[],warnings=[];
+      if(d.homes.includes(v.home)){score+=14;reasons.push('logement adapté')}else{score-=22;warnings.push('logement moins adapté')}
+      const ag=Math.abs(rank[d.activity]-rank[v.activity]);if(!ag){score+=22;reasons.push('niveau d’activité très proche')}else if(ag===1){score+=3;warnings.push('énergie à ajuster')}else{score-=24;warnings.push('niveau d’activité très différent')}
+      const timeGap=v.time-d.time;if(timeGap>=0){score+=20;reasons.push('temps quotidien suffisant')}else if(timeGap>=-30){score-=7;warnings.push('temps quotidien un peu court')}else{score-=32;warnings.push('temps quotidien insuffisant')}
+      if(rank[v.experience]>=rank[d.experience]){score+=14;reasons.push('expérience compatible')}else{score-=28;warnings.push('race plus exigeante que ton expérience')}
+      if(v.children==='yes'&&!d.children){score-=40;warnings.push('profil moins indiqué avec des enfants')}else{score+=12;if(v.children==='yes')reasons.push('profil familial')}
+      if(v.size==='any'){score+=4}else if(v.size===d.size){score+=20;reasons.push('taille recherchée')}else{score-=18;warnings.push('taille différente')}
+      if(rank[v.groom]>=rank[d.groom]){score+=12;reasons.push('entretien accepté')}else{score-=18;warnings.push('toilettage plus exigeant')}
+      if(v.style===d.style){score+=18;reasons.push('tempérament recherché')}else{score-=8;warnings.push('style de relation différent')}
+      return {...d,score,reasons,warnings,percent:Math.max(5,Math.min(98,Math.round((score+55)/1.75)))};
+    }).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,'fr')).slice(0,3);
+    $('idealResult').className='result open';$('idealResult').innerHTML='<h3>Les profils les plus compatibles avec tes réponses actuelles</h3><div class="recommendations">'+results.map(d=>'<article class="recommendation"><small>Compatibilité estimée '+d.percent+' %</small><h3>'+d.name+'</h3><p><strong>Points forts :</strong> '+d.reasons.slice(0,4).join(' · ')+'</p><p><strong>À vérifier :</strong> '+(d.warnings.slice(0,2).join(' · ')||'aucun écart important')+'</p><a href="dicochien.html?section=races&breed='+encodeURIComponent(d.name)+'">Voir sa fiche →</a></article>').join('')+'</div><p><small>Le classement est recalculé avec chaque réponse. Il reste indicatif : le caractère individuel, la santé et l’histoire du chien comptent aussi.</small></p>';
+  }
+  $('idealSubmit').onclick=recommend;ids.forEach(id=>$(id)?.addEventListener('change',()=>{if(complete())recommend()}));
+
+  const breedSelect=$('budgetBreed');if(breedSelect&&!breedSelect.querySelector('[value="corgi"]'))breedSelect.insertAdjacentHTML('afterbegin','<option value="corgi">Welsh Corgi Pembroke</option>');
+  const presets={corgi:['small','regular','high',1.05],labrador:['large','easy','high',1.08],golden:['large','regular','high',1.12],poodle:['large','pro','high',1.16],bulldog:['small','easy','moderate',1.22],beagle:['medium','easy','high',1],border:['medium','regular','very-high',1.08],husky:['medium','regular','very-high',1.12],chihuahua:['small','easy','moderate',.9],newfoundland:['giant','regular','moderate',1.3],standard:[null,null,null,1]};
+  function calculate(){const breed=breedSelect.value,size=$('budgetSize').value,coat=$('budgetCoat').value,activity=$('budgetActivity').value,factor=presets[breed]?.[3]||1,name=breedSelect.selectedOptions[0].textContent;const food=Math.round(({small:650,medium:950,large:1350,giant:1900}[size]+({moderate:0,high:180,'very-high':350}[activity]))*factor),vet=Math.round({small:650,medium:700,large:780,giant:900}[size]*factor),groom=Math.round({easy:180,regular:420,pro:950}[coat]*factor),insurance=Math.round({small:550,medium:680,large:820,giant:1050}[size]*factor),gear={small:320,medium:420,large:520,giant:650}[size],training=350,total=food+vet+groom+insurance+gear+training,low=Math.round(total*.85),high=Math.round(total*1.25);$('budgetResult').className='result open';$('budgetResult').innerHTML='<h3>'+name+'</h3><div class="budget-total">'+low.toLocaleString('fr-CA')+' à '+high.toLocaleString('fr-CA')+' $ / an</div><div class="budget-lines"><span>Alimentation : ≈ '+food+' $</span><span>Prévention vétérinaire : ≈ '+vet+' $</span><span>Toilettage : ≈ '+groom+' $</span><span>Assurance : ≈ '+insurance+' $</span><span>Matériel : ≈ '+gear+' $</span><span>Éducation : ≈ '+training+' $</span></div><p><small>Le résultat se met à jour dès qu’un choix change. Il s’agit d’une estimation canadienne; garde un fonds d’urgence séparé.</small></p>';}
+  breedSelect.onchange=()=>{const p=presets[breedSelect.value];if(p?.[0]){$('budgetSize').value=p[0];$('budgetCoat').value=p[1];$('budgetActivity').value=p[2]}calculate()};$('budgetSubmit').onclick=calculate;['budgetSize','budgetCoat','budgetActivity'].forEach(id=>$(id).addEventListener('change',calculate));
+})();
