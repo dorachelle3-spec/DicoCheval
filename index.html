@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="DicoPets, la plateforme pour découvrir et mieux comprendre les chevaux, les chiens et les chats.">
+  <meta name="theme-color" content="#173b30"><link rel="manifest" href="manifest.webmanifest?v=20260811"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20260811"><link rel="stylesheet" href="mobile-fixes.css?v=20260811">
   <title>DicoPets — Comprendre les animaux qui partagent nos vies</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -44,14 +45,14 @@
 
     <section class="intro" id="univers">
       <div class="wrap">
-        <div class="section-heading"><h2 data-fr="Choisis ton univers" data-en="Choose your world">Choisis ton univers</h2><p data-fr="Les univers DicoCheval et DicoChien sont ouverts. L’espace consacré aux chats sera construit prochainement." data-en="DicoCheval and DicoChien are now open. The cat space will be built soon.">Les univers DicoCheval et DicoChien sont ouverts. L’espace consacré aux chats sera construit prochainement.</p></div>
+        <div class="section-heading"><h2 data-fr="Choisis ton univers" data-en="Choose your world">Choisis ton univers</h2><p data-fr="Les univers DicoCheval, DicoChien et DicoChat sont maintenant ouverts." data-en="DicoCheval, DicoChien and DicoChat are now open.">Les univers DicoCheval, DicoChien et DicoChat sont maintenant ouverts.</p></div>
         <div class="world-grid">
           <article class="world-card">
             <div class="world-photo"><img src="assets/preview-carte-races.png" alt="Cheval bai au galop"></div>
             <div class="world-copy"><span class="tag" data-fr="Univers disponible" data-en="Available now">Univers disponible</span><h3>DicoCheval</h3><p data-fr="Races, disciplines, soins, équipement, anatomie, quiz et outils pour les passionnés de chevaux." data-en="Breeds, disciplines, care, equipment, anatomy, quizzes and tools for horse lovers.">Races, disciplines, soins, équipement, anatomie, quiz et outils pour les passionnés de chevaux.</p><a class="button" href="dicocheval.html" data-fr="Voir DicoCheval →" data-en="Open DicoCheval →">Voir DicoCheval →</a></div>
           </article>
           <article class="world-card"><div class="world-photo"><img src="assets/dicopets-chien.jpg" alt="Cinq chiens assis dans un champ de fleurs"></div><div class="world-copy"><span class="tag" data-fr="Univers disponible" data-en="Available now">Univers disponible</span><h3>DicoChien</h3><p data-fr="Des races populaires et plus rares à comparer selon leur taille, leur poids, leur énergie, leurs besoins et leurs qualités." data-en="Compare popular and lesser-known breeds by height, weight, energy, daily needs and strengths.">Des races populaires et plus rares à comparer selon leur taille, leur poids, leur énergie, leurs besoins et leurs qualités.</p><a class="button" href="dicochien.html?v=20260811-owner-profile" data-fr="Voir DicoChien →" data-en="Open DicoChien →">Voir DicoChien →</a></div></article>
-          <article class="world-card coming"><div class="world-photo" aria-hidden="true">🐈</div><div class="world-copy"><span class="tag" data-fr="Prochainement" data-en="Coming soon">Prochainement</span><h3>DicoChat</h3><p data-fr="Un futur espace pour comprendre les races, la santé, le comportement et les besoins des chats." data-en="A future space for understanding cat breeds, health, behavior and needs.">Un futur espace pour comprendre les races, la santé, le comportement et les besoins des chats.</p><a class="button button-ghost" href="dicochat.html" data-fr="Voir l’aperçu →" data-en="View preview →">Voir l’aperçu →</a></div></article>
+          <article class="world-card"><div class="world-photo"><img src="assets/dicopets-chat.jpg" alt="Portrait d’un chat roux"></div><div class="world-copy"><span class="tag" data-fr="Univers disponible" data-en="Available now">Univers disponible</span><h3>DicoChat</h3><p data-fr="Races félines, santé, comportement, quiz, budget, noms et outils pour bien vivre avec un chat." data-en="Cat breeds, health, behaviour, quizzes, budgets, names and tools for living well with a cat.">Races félines, santé, comportement, quiz, budget, noms et outils pour bien vivre avec un chat.</p><a class="button" href="dicochat.html?v=20260811-launch" data-fr="Voir DicoChat →" data-en="Open DicoChat →">Voir DicoChat →</a></div></article>
         </div>
       </div>
     </section>
@@ -83,5 +84,6 @@
   <script src="member-profile.js?v=20260810-shared"></script>
   <script>document.getElementById('openMemberFromAccount')?.addEventListener('click',event=>{event.preventDefault();document.getElementById('accountModal')?.classList.remove('open');document.getElementById('topVisitorAccess')?.click()});</script>
   <script src="signup-reminder.js?v=20260810-popup"></script>
+  <script src="pwa.js?v=20260811"></script>
 </body>
 </html>
