@@ -19,6 +19,11 @@
   html[data-theme="dark"] :is(h1,h2,h3,h4,strong,b){color:#f1f6f3}
   html[data-theme="dark"] .book{background:#17251f!important}
   html[data-theme="dark"] .member-theme{border-color:#365047!important}
+  html[data-theme="dark"] :is(.result,.names span,.answers button,.ideal-card .why,.budget-lines span,.badge){background:#1b3027!important;color:#e6eee9!important;border-color:#456158!important}
+  html[data-theme="dark"] :is(.result,.recommendations,.ideal-card,.budget-lines) :is(p,span,small,label){color:#c5d4cc!important}
+  html[data-theme="dark"] .budget-total{color:#e8c985!important}
+  html[data-theme="dark"] .ideal-master{background:linear-gradient(135deg,#10271f,#244b3d)!important;color:#fff!important}
+  html[data-theme="dark"] .ideal-master :is(span,p){color:#edf4ef!important}
   html[data-theme="dark"] a:not(.button):not(.btn):not(.google):not(.journal-button){color:#e8c985}
   .member-theme{border-top:1px solid #dde7dd;margin-top:20px;padding-top:16px}.member-theme label{display:block;font-weight:800;margin-bottom:6px}.member-theme select{width:100%;padding:11px;border:1px solid #cbd8ce;border-radius:8px;background:#fff;color:#234238;font:inherit}.member-theme p{font-size:12px;color:#60746a}
   `;document.head.appendChild(style);
