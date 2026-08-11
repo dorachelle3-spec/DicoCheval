@@ -66,6 +66,33 @@
   const activityText = {fr:{moderate:'Modérée',high:'Élevée','very-high':'Très élevée'},en:{moderate:'Moderate',high:'High','very-high':'Very high'}};
   const sizeText = {fr:{small:'Petit chien',medium:'Chien moyen',large:'Grand chien',giant:'Chien géant'},en:{small:'Small dog',medium:'Medium dog',large:'Large dog',giant:'Giant dog'}};
   const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const advancedBreeds = new Set(['Akita','Shiba Inu','Basenji','Thai Ridgeback','Border Collie','Berger belge malinois','Husky sibérien','Jack Russell Terrier','Rottweiler','Dobermann','Otterhound','Lévrier afghan']);
+  const intermediateBreeds = new Set(['Berger allemand','Berger australien','Samoyède','Beagle','Schnauzer nain','Welsh Corgi Cardigan','Welsh Corgi Pembroke','Lagotto Romagnolo','Chien d’eau portugais','Mudi','Pumi']);
+
+  function idealOwner(b){
+    const suffix=lang==='fr'?'Fr':'En',attached=/attach|proche|famill|humain|people|family|compagn/i.test(`${b.traitsFr} ${b.characterFr} ${b.knowFr}`);
+    let homeFr,homeEn;
+    if(b.size==='small'){
+      homeFr=b.activity==='moderate'?'Appartement ou maison; un espace extérieur privé n’est pas obligatoire.':'Appartement possible avec plusieurs sorties; maison sécurisée appréciée.';
+      homeEn=b.activity==='moderate'?'Apartment or house; a private yard is not essential.':'Apartment possible with several outings; a secure house is appreciated.';
+    }else if(b.size==='medium'){
+      homeFr=b.activity==='moderate'?'Appartement spacieux ou maison, avec sorties quotidiennes régulières.':'Maison idéale; appartement possible pour une personne très active et disponible.';
+      homeEn=b.activity==='moderate'?'Spacious apartment or house, with regular daily outings.':'House preferred; an apartment can work for a very active and available person.';
+    }else if(b.size==='giant'){
+      homeFr='Logement spacieux, accès facile à l’extérieur et déplacements sans escaliers répétés.';homeEn='Spacious home, easy outdoor access and no need for repeated stairs.';
+    }else{
+      homeFr=b.activity==='moderate'?'Maison ou grand appartement, avec espace de repos et sorties régulières.':'Maison avec espace sécurisé recommandée; le jardin ne remplace jamais les sorties.';
+      homeEn=b.activity==='moderate'?'House or large apartment, with resting space and regular outings.':'House with secure space recommended; a yard never replaces proper outings.';
+    }
+    let experienceFr='Convient à une personne débutante bien informée, patiente et prête à apprendre.',experienceEn='Can suit a well-informed beginner who is patient and willing to learn.';
+    if(intermediateBreeds.has(b.fr)){experienceFr='Une première expérience canine est préférable, avec une éducation régulière et positive.';experienceEn='Some previous dog experience is preferable, with regular positive training.'}
+    if(advancedBreeds.has(b.fr)){experienceFr='Maître expérimenté recommandé, capable d’offrir structure, socialisation et gestion cohérente.';experienceEn='Experienced owner recommended, able to provide structure, socialization and consistent management.'}
+    const presenceFr=attached?'Présence fréquente et vraie vie familiale; éviter les longues absences quotidiennes.':b.activity==='very-high'?'Plusieurs périodes disponibles chaque jour pour sorties, travail mental et récupération.':'Du temps chaque jour pour les sorties et les interactions, avec un apprentissage progressif de la solitude.';
+    const presenceEn=attached?'Frequent company and genuine family life; avoid long daily absences.':b.activity==='very-high'?'Several available periods each day for outings, mental work and recovery.':'Daily time for outings and interaction, with gradual training for time alone.';
+    const lifestyleFr=b.activity==='very-high'?'Très actif et structuré : sport, apprentissages et activités mentales presque tous les jours.':b.activity==='high'?'Actif et disponible : promenades variées, jeux de flair et apprentissages réguliers.':'Calme mais présent : promenades régulières, jeux doux et routine stable.';
+    const lifestyleEn=b.activity==='very-high'?'Highly active and structured: sport, training and mental activities almost every day.':b.activity==='high'?'Active and available: varied walks, scent games and regular training.':'Calm but present: regular walks, gentle games and a stable routine.';
+    return {home:lang==='fr'?homeFr:homeEn,time:b[`daily${suffix}`],experience:lang==='fr'?experienceFr:experienceEn,presence:lang==='fr'?presenceFr:presenceEn,lifestyle:lang==='fr'?lifestyleFr:lifestyleEn};
+  }
 
   function applyLanguage(){
     lang = els.language.value;
@@ -112,6 +139,12 @@
     document.getElementById('modalDaily').textContent = b[`daily${suffix}`];
     document.getElementById('modalCharacteristics').textContent = b[`character${suffix}`];
     document.getElementById('modalKnow').textContent = b[`know${suffix}`];
+    const owner=idealOwner(b);
+    document.getElementById('modalIdealHome').textContent=owner.home;
+    document.getElementById('modalIdealTime').textContent=owner.time;
+    document.getElementById('modalIdealExperience').textContent=owner.experience;
+    document.getElementById('modalIdealPresence').textContent=owner.presence;
+    document.getElementById('modalIdealLifestyle').textContent=owner.lifestyle;
     const qualities = b[`qualities${suffix}`]; document.getElementById('modalQualities').replaceChildren(...qualities.map(q => {const span=document.createElement('span');span.className='quality';span.textContent=q;return span;}));
     const term = lang === 'fr' ? `${b.fr} race de chien caractéristiques` : `${b.en} dog breed characteristics`;
     document.getElementById('googleLink').href = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
