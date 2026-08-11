@@ -11,7 +11,7 @@
     input,textarea,select{width:100%;border:1px solid #bdc9bf;border-radius:11px;padding:12px;font:inherit;background:#fff;color:var(--ink)}
     .calendar-panel{margin-bottom:70px;padding:30px;border:1px solid #dfd7c7;border-radius:22px;background:var(--paper);box-shadow:0 18px 45px #44351e12}.calendar-panel h2{font-size:38px;margin:0 0 8px}.calendar-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.9fr);gap:25px;margin-top:22px}.event-list{display:grid;gap:10px;align-content:start}.event-card{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:start;padding:15px;border:1px solid var(--line);border-radius:13px;background:#f4f7f2}.event-date{min-width:64px;padding:8px;border-radius:10px;background:var(--forest);color:#fff;text-align:center;font-weight:900}.event-card h3{margin:0}.event-card p{margin:4px 0;color:var(--muted)}.event-delete{border:0;background:transparent;color:#9a3d3d;font-weight:900;cursor:pointer}@media(max-width:760px){.calendar-grid{grid-template-columns:1fr}.event-card{grid-template-columns:auto 1fr}.event-delete{grid-column:2}}
   </style>
-</head>
+<script src="theme.js?v=20260812"></script></head>
 <body>
   <header class="top"><div class="wrap"><strong>DicoPets · DicoChien</strong><a href="dicochien.html">← Retour à DicoChien</a></div></header>
   <section class="hero"><div class="wrap"><h1>Mon journal canin</h1><p>Un carnet personnel pour suivre les promenades, l’éducation, la santé et les petits moments importants. Les pages sont liées à ton compte et protégées par Supabase.</p></div></section>
@@ -23,7 +23,7 @@
   <section id="entryBook" class="entry-book"><article class="entry-pages"><h2 id="entryTitle"></h2><div id="entryMeta" class="entry-meta"></div><div id="entryNotes" class="entry-text"></div><h3>Prochain objectif</h3><div id="entryGoal" class="entry-text"></div><div class="actions"><button id="backLibrary" class="button">Retour à mon journal</button><button id="deleteEntry" class="button danger">Supprimer cette page</button></div></article></section>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="journal-chien.js?v=20260810-private"></script>
-  <script src="notifications.js?v=20260811"></script><script src="dog-calendar.js?v=20260811-notifications"></script>
+  <script src="notifications.js?v=20260811"></script><script src="dog-calendar.js?v=20260812-events"></script>
   <script src="signup-reminder.js?v=20260810"></script><script src="pwa.js?v=20260811"></script>
 </body>
 </html>
