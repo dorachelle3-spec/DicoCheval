@@ -1,5 +1,8 @@
 (()=>{'use strict';
   const KEY='dicopets-calendar-reminders-v3',OLD_KEY='dicopets-calendar-reminders-v2',timers=new Map(),MAX_DELAY=2147483000;
+  const VAPID_PUBLIC_KEY='BOXTs73F-Ln7fvR-tTGEn-s_bxbQDXfKjsyDiJtzUG7eJ9qwO-_3Aqfr3NyOBrjjQ6maqVSxqNBC2XtFbjHnQ8U';
+  const SUPABASE_URL='https://mmxdlnfntpufwwkdvgzc.supabase.co',SUPABASE_KEY='sb_publishable_Pa-DX3nwNTZktbWK46KDQg_IuIy8TZP';
+  let remoteDb=null;
   const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY)||'[]')}catch{return[]}};
   const write=list=>localStorage.setItem(KEY,JSON.stringify(list.slice(-150)));
   const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -10,6 +13,21 @@
     if(!('serviceWorker' in navigator))return null;
     try{await navigator.serviceWorker.register('service-worker.js?v=20260815');return await navigator.serviceWorker.ready}catch{return null}
   };
+  const db=()=>{if(remoteDb)return remoteDb;if(!window.supabase)return null;remoteDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return remoteDb};
+  const vapidBytes=value=>{const padding='='.repeat((4-value.length%4)%4),base64=(value+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))};
+  async function saveSubscription(registration){
+    const client=db();if(!client||!registration?.pushManager)return{saved:false,reason:'client'};
+    const {data:{user}}=await client.auth.getUser();if(!user)return{saved:false,reason:'login'};
+    let subscription=await registration.pushManager.getSubscription();
+    if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidBytes(VAPID_PUBLIC_KEY)});
+    const json=subscription.toJSON(),keys=json.keys||{};
+    const {error}=await client.from('push_subscriptions').upsert({user_id:user.id,endpoint:json.endpoint,p256dh:keys.p256dh,auth:keys.auth,expiration_time:json.expirationTime||null,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});
+    return{saved:!error,reason:error?.message||''};
+  }
+  async function saveRemoteReminder(item){
+    const client=db();if(!client)return;try{const {data:{user}}=await client.auth.getUser();if(!user)return;await client.from('notification_queue').upsert({user_id:user.id,reminder_id:item.id,notify_at:new Date(Number(item.when)).toISOString(),title:item.title||'Rappel DicoPets',body:item.body||'Un événement approche.',url:item.url||'/DicoCheval/index.html',status:'pending',sent_at:null,last_error:null},{onConflict:'user_id,reminder_id'})}catch{}
+  }
+  async function removeRemoteReminder(id){const client=db();if(!client)return;try{const {data:{user}}=await client.auth.getUser();if(user)await client.from('notification_queue').delete().eq('user_id',user.id).eq('reminder_id',id)}catch{}}
   function capability(){
     if(!secure())return{ok:false,code:'https',message:'Les notifications exigent une connexion sécurisée HTTPS.'};
     if(isIOS()&&!isStandalone())return{ok:false,code:'install-ios',message:'Sur iPhone ou iPad, installe d’abord DicoPets sur l’écran d’accueil, ouvre l’application créée, puis appuie de nouveau sur « Activer les rappels ».'};
@@ -38,16 +56,21 @@
     timers.set(item.id,setTimeout(async()=>{if(await show(item))markSent(item.id);timers.delete(item.id)},delay));
   }
   function rearm(){read().filter(x=>!x.sent).forEach(arm)}
-  function schedule(item){if(!item?.id||!item?.when)return;const list=read().filter(x=>x.id!==item.id);list.push({...item,sent:false});write(list);arm(item)}
-  function remove(id){write(read().filter(x=>x.id!==id));clearTimeout(timers.get(id));timers.delete(id)}
+  function schedule(item){if(!item?.id||!item?.when)return;const list=read().filter(x=>x.id!==item.id);list.push({...item,sent:false});write(list);arm(item);saveRemoteReminder(item)}
+  function remove(id){write(read().filter(x=>x.id!==id));clearTimeout(timers.get(id));timers.delete(id);removeRemoteReminder(id)}
   async function enable(){
     const support=capability();if(!support.ok){installHelp(support.code);return support}
-    await getRegistration();
+    const registration=await getRegistration();
     let permission=Notification.permission;
     if(permission==='default')permission=await Notification.requestPermission();
     if(permission!=='granted'){installHelp('blocked');return{ok:false,code:'denied',message:'Les notifications sont bloquées. Autorise DicoPets dans les réglages de ton navigateur ou de ton appareil.'}}
+    let push={saved:false,reason:'unsupported'};try{push=await saveSubscription(registration)}catch(error){push={saved:false,reason:error?.message||'subscription'}}
     const displayed=await show({id:'welcome-'+Date.now(),title:'Notifications DicoPets activées',body:'Le test fonctionne sur cet appareil et ce navigateur.',url:location.href});
-    rearm();return displayed?{ok:true,code:'enabled',message:'Notifications activées : une notification de test vient d’être envoyée.'}:{ok:false,code:'display',message:'L’autorisation est donnée, mais la notification de test n’a pas pu être affichée.'};
+    rearm();
+    if(!displayed)return{ok:false,code:'display',message:'L’autorisation est donnée, mais la notification de test n’a pas pu être affichée.'};
+    if(push.saved)return{ok:true,code:'push-enabled',message:'Notifications activées, y compris lorsque DicoPets est fermé.'};
+    if(push.reason==='login')return{ok:true,code:'local-only',message:'Notification de test réussie. Connecte-toi à ton compte pour recevoir les rappels lorsque DicoPets est fermé.'};
+    return{ok:true,code:'local-only',message:'Notification de test réussie. Le service Supabase doit encore être activé pour les rappels lorsque DicoPets est fermé.'};
   }
   const style=document.createElement('style');style.textContent='.notification-help{position:fixed;z-index:10000;left:50%;bottom:max(18px,env(safe-area-inset-bottom));width:min(520px,calc(100% - 28px));transform:translateX(-50%);padding:20px 44px 20px 20px;border:1px solid #d5c08f;border-radius:16px;background:#fffdf8;color:#173b30;box-shadow:0 18px 55px #102a2255;font:15px/1.5 Arial,sans-serif}.notification-help strong{display:block;font:700 21px Georgia,serif}.notification-help button{position:absolute;right:10px;top:9px;border:0;background:transparent;color:#173b30;font-size:25px}.notification-help ol{margin-bottom:0;padding-left:20px}html[data-theme="dark"] .notification-help{background:#17251f;color:#edf4ef;border-color:#6f603e}';document.head.appendChild(style);
   rearm();addEventListener('focus',rearm);document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&rearm());
