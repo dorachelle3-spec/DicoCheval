@@ -14,7 +14,7 @@
   async function authenticate(create){
     const email=$('commentEmail').value.trim(),password=$('commentPassword').value,info=$('commentAuthInfo');
     if(!email||password.length<6){info.textContent=en()?'Enter an email and a password of at least 6 characters.':'Entre une adresse courriel et un mot de passe d’au moins 6 caractères.';return}
-    const result=create?await db.auth.signUp({email,password,options:{emailRedirectTo:'https://dorachelle3-spec.github.io/DicoCheval/'}}):await db.auth.signInWithPassword({email,password});
+    const result=create?await db.auth.signUp({email,password,options:{emailRedirectTo:'https://dorachelle3-spec.github.io/DicoPets/'}}):await db.auth.signInWithPassword({email,password});
     if(result.error){info.textContent=result.error.message;return}
     info.textContent=create?(en()?'Check your email.':'Vérifie ton courriel.'):(en()?'Signed in.':'Connexion réussie !');
     if(!create){$('commentAuthModal').classList.remove('open');sync(true)}

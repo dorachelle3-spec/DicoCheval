@@ -89,7 +89,7 @@
     const password=$('accountPassword').value;
     if(!email||password.length<6){$('accountInfo').textContent=english()?'Enter an email and a password of at least 6 characters.':'Entre une adresse courriel et un mot de passe d’au moins 6 caractères.';return}
     $('accountInfo').textContent=english()?'Please wait…':'Patiente…';
-    const result=create?await db.auth.signUp({email,password,options:{emailRedirectTo:'https://dorachelle3-spec.github.io/DicoCheval/'}}):await db.auth.signInWithPassword({email,password});
+    const result=create?await db.auth.signUp({email,password,options:{emailRedirectTo:'https://dorachelle3-spec.github.io/DicoPets/'}}):await db.auth.signInWithPassword({email,password});
     if(result.error){$('accountInfo').textContent=result.error.message;return}
     $('accountInfo').textContent=create?(english()?'Check your email to confirm the account.':'Vérifie ton courriel pour confirmer ton compte.'):(english()?'You are signed in.':'Connexion réussie !');
     if(!create){await openAccount();await refreshAccountButton();await renderNews()}

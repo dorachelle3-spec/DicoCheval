@@ -52,7 +52,7 @@
     const { error } = await db.auth.signUp({
       email: $('dogAuthEmail').value.trim(),
       password: $('dogAuthPassword').value,
-      options: { emailRedirectTo: 'https://dorachelle3-spec.github.io/DicoCheval/dicochien.html' }
+      options: { emailRedirectTo: 'https://dorachelle3-spec.github.io/DicoPets/dicochien.html' }
     });
     message(error ? labels[key].error : labels[key].sent);
   };

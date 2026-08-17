@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dorachelle3-spec.github.io/DicoCheval/sitemap.xml
+Sitemap: https://dorachelle3-spec.github.io/DicoPets/sitemap.xml

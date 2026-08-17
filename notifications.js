@@ -25,7 +25,7 @@
     return{saved:!error,reason:error?.message||''};
   }
   async function saveRemoteReminder(item){
-    const client=db();if(!client)return;try{const {data:{user}}=await client.auth.getUser();if(!user)return;await client.from('notification_queue').upsert({user_id:user.id,reminder_id:item.id,notify_at:new Date(Number(item.when)).toISOString(),title:item.title||'Rappel DicoPets',body:item.body||'Un événement approche.',url:item.url||'/DicoCheval/index.html',status:'pending',sent_at:null,last_error:null},{onConflict:'user_id,reminder_id'})}catch{}
+    const client=db();if(!client)return;try{const {data:{user}}=await client.auth.getUser();if(!user)return;await client.from('notification_queue').upsert({user_id:user.id,reminder_id:item.id,notify_at:new Date(Number(item.when)).toISOString(),title:item.title||'Rappel DicoPets',body:item.body||'Un événement approche.',url:item.url||'/DicoPets/index.html',status:'pending',sent_at:null,last_error:null},{onConflict:'user_id,reminder_id'})}catch{}
   }
   async function removeRemoteReminder(id){const client=db();if(!client)return;try{const {data:{user}}=await client.auth.getUser();if(user)await client.from('notification_queue').delete().eq('user_id',user.id).eq('reminder_id',id)}catch{}}
   function capability(){
@@ -38,14 +38,23 @@
   function installHelp(code){
     let box=document.getElementById('notificationHelp');
     if(!box){box=document.createElement('aside');box.id='notificationHelp';box.className='notification-help';document.body.appendChild(box)}
-    if(code==='install-ios')box.innerHTML='<button type="button" aria-label="Fermer">×</button><strong>Activer les notifications sur iPhone ou iPad</strong><ol><li>Ouvre DicoPets dans Safari.</li><li>Appuie sur Partager.</li><li>Choisis « Sur l’écran d’accueil » et active « Ouvrir comme app » si ce choix apparaît.</li><li>Ouvre DicoPets avec sa nouvelle icône.</li><li>Retourne au calendrier et appuie sur « Activer les rappels ».</li></ol>';
+    const english=document.documentElement.lang.toLowerCase().startsWith('en');
+    if(code==='install-ios')box.innerHTML=english?'<button type="button" aria-label="Close">×</button><strong>Create the web app to receive notifications</strong><p>On iPhone or iPad, notifications only work from the DicoPets web app added to your Home Screen.</p><ol><li>Open DicoPets in Safari.</li><li>Tap Share.</li><li>Choose “Add to Home Screen” and enable “Open as Web App” if that option appears.</li><li>Open DicoPets using its new icon.</li><li>Return to the calendar and tap “Enable reminders”.</li></ol>':'<button type="button" aria-label="Fermer">×</button><strong>Crée l’application web pour recevoir les notifications</strong><p>Sur iPhone ou iPad, les notifications ne peuvent fonctionner que depuis l’application DicoPets ajoutée à l’écran d’accueil.</p><ol><li>Ouvre DicoPets dans Safari.</li><li>Appuie sur Partager.</li><li>Choisis « Sur l’écran d’accueil » et active « Ouvrir comme app » si ce choix apparaît.</li><li>Ouvre DicoPets avec sa nouvelle icône.</li><li>Retourne au calendrier et appuie sur « Activer les rappels ».</li></ol>';
     else box.innerHTML='<button type="button" aria-label="Fermer">×</button><strong>Notifications bloquées</strong><p>Autorise DicoPets dans les réglages du navigateur et dans les réglages de notifications de ton appareil, puis réessaie.</p>';
     box.querySelector('button').onclick=()=>box.remove();
+  }
+  function addIOSInstallNotice(){
+    if(!isIOS()||isStandalone()||document.getElementById('iosNotificationNotice'))return;
+    const button=document.getElementById('enableNotifications');if(!button)return;
+    const english=document.documentElement.lang.toLowerCase().startsWith('en');
+    const notice=document.createElement('div');notice.id='iosNotificationNotice';notice.className='notification-ios-notice';notice.setAttribute('role','note');
+    notice.innerHTML=english?'<strong>iPhone / iPad</strong> Add DicoPets to your Home Screen as a web app before enabling notifications.': '<strong>iPhone / iPad</strong> Pour recevoir les notifications, ajoute d’abord DicoPets à ton écran d’accueil comme application web.';
+    button.insertAdjacentElement('afterend',notice);
   }
   async function show(item){
     if(!('Notification' in window)||Notification.permission!=='granted')return false;
     const registration=await getRegistration();
-    const options={body:item.body||'Un événement DicoPets approche.',icon:'/DicoCheval/icon-192.png',badge:'/DicoCheval/icon-192.png',tag:'dicopets-'+item.id,renotify:false,data:{url:item.url||location.href}};
+    const options={body:item.body||'Un événement DicoPets approche.',icon:'/DicoPets/icon-dicopets.png',badge:'/DicoPets/icon-dicopets.png',tag:'dicopets-'+item.id,renotify:false,data:{url:item.url||location.href}};
     try{if(registration){await registration.showNotification(item.title||'Rappel DicoPets',options);return true}new Notification(item.title||'Rappel DicoPets',options);return true}catch{return false}
   }
   function markSent(id){write(read().map(x=>x.id===id?{...x,sent:true}:x))}
@@ -56,7 +65,7 @@
     timers.set(item.id,setTimeout(async()=>{if(await show(item))markSent(item.id);timers.delete(item.id)},delay));
   }
   function rearm(){read().filter(x=>!x.sent).forEach(arm)}
-  function schedule(item){if(!item?.id||!item?.when)return;const list=read().filter(x=>x.id!==item.id);list.push({...item,sent:false});write(list);arm(item);saveRemoteReminder(item)}
+  function schedule(item){if(!item?.id||!item?.when||Number(item.when)<=Date.now()+500)return;const list=read().filter(x=>x.id!==item.id);list.push({...item,sent:false});write(list);arm(item);saveRemoteReminder(item)}
   function remove(id){write(read().filter(x=>x.id!==id));clearTimeout(timers.get(id));timers.delete(id);removeRemoteReminder(id)}
   async function enable(){
     const support=capability();if(!support.ok){installHelp(support.code);return support}
@@ -72,7 +81,7 @@
     if(push.reason==='login')return{ok:true,code:'local-only',message:'Notification de test réussie. Connecte-toi à ton compte pour recevoir les rappels lorsque DicoPets est fermé.'};
     return{ok:true,code:'local-only',message:'Notification de test réussie. Le service Supabase doit encore être activé pour les rappels lorsque DicoPets est fermé.'};
   }
-  const style=document.createElement('style');style.textContent='.notification-help{position:fixed;z-index:10000;left:50%;bottom:max(18px,env(safe-area-inset-bottom));width:min(520px,calc(100% - 28px));transform:translateX(-50%);padding:20px 44px 20px 20px;border:1px solid #d5c08f;border-radius:16px;background:#fffdf8;color:#173b30;box-shadow:0 18px 55px #102a2255;font:15px/1.5 Arial,sans-serif}.notification-help strong{display:block;font:700 21px Georgia,serif}.notification-help button{position:absolute;right:10px;top:9px;border:0;background:transparent;color:#173b30;font-size:25px}.notification-help ol{margin-bottom:0;padding-left:20px}html[data-theme="dark"] .notification-help{background:#17251f;color:#edf4ef;border-color:#6f603e}';document.head.appendChild(style);
-  rearm();addEventListener('focus',rearm);document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&rearm());
+  const style=document.createElement('style');style.textContent='.notification-help{position:fixed;z-index:10000;left:50%;bottom:max(18px,env(safe-area-inset-bottom));width:min(520px,calc(100% - 28px));transform:translateX(-50%);padding:20px 44px 20px 20px;border:1px solid #d5c08f;border-radius:16px;background:#fffdf8;color:#173b30;box-shadow:0 18px 55px #102a2255;font:15px/1.5 Arial,sans-serif}.notification-help strong{display:block;font:700 21px Georgia,serif}.notification-help button{position:absolute;right:10px;top:9px;border:0;background:transparent;color:#173b30;font-size:25px}.notification-help ol{margin-bottom:0;padding-left:20px}.notification-ios-notice{margin:10px 0 14px;padding:11px 13px;border:1px solid #d5c08f;border-radius:11px;background:#fff7dc;color:#173b30;font:14px/1.45 Arial,sans-serif}.notification-ios-notice strong{display:block;margin-bottom:2px}html[data-theme="dark"] .notification-help,html[data-theme="dark"] .notification-ios-notice{background:#17251f;color:#edf4ef;border-color:#6f603e}';document.head.appendChild(style);
+  rearm();addEventListener('focus',rearm);document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&rearm());document.readyState==='loading'?document.addEventListener('DOMContentLoaded',addIOSInstallNotice,{once:true}):addIOSInstallNotice();
   window.DicoPetsNotifications={enable,schedule,remove,capability,showTest:()=>show({id:'manual-'+Date.now(),title:'Test DicoPets',body:'Les notifications fonctionnent.',url:location.href})};
 })();
