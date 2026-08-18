@@ -51,10 +51,21 @@
     notice.innerHTML=english?'<strong>iPhone / iPad</strong> Add DicoPets to your Home Screen as a web app before enabling notifications.': '<strong>iPhone / iPad</strong> Pour recevoir les notifications, ajoute d’abord DicoPets à ton écran d’accueil comme application web.';
     button.insertAdjacentElement('afterend',notice);
   }
+  function ensureReminderButton(){
+    const calendar=document.querySelector('#calendrier,.calendar-panel,#events');
+    if(!calendar||document.getElementById('enableNotifications'))return;
+    const button=document.createElement('button');button.id='enableNotifications';button.type='button';button.className='button notification-enable-button';button.textContent='🔔 Activer les rappels';
+    const status=document.createElement('p');status.id='notificationStatus';status.className='status';
+    calendar.insertBefore(button,calendar.firstChild);button.insertAdjacentElement('afterend',status);
+  }
+  function bindReminderButton(){
+    const button=document.getElementById('enableNotifications');if(!button||button.dataset.notificationsBound)return;
+    button.dataset.notificationsBound='true';button.addEventListener('click',async()=>{const result=await enable();const status=document.getElementById('notificationStatus');if(status)status.textContent=result.message});
+  }
   async function show(item){
     if(!('Notification' in window)||Notification.permission!=='granted')return false;
     const registration=await getRegistration();
-    const options={body:item.body||'Un événement DicoPets approche.',icon:'/DicoPets/icon-dicopets.png',badge:'/DicoPets/icon-dicopets.png',tag:'dicopets-'+item.id,renotify:false,data:{url:item.url||location.href}};
+    const options={body:item.body||'Un événement DicoPets approche.',icon:'/DicoPets/icon-dicopets-v2.png',badge:'/DicoPets/icon-dicopets-v2.png',tag:'dicopets-'+item.id,renotify:false,data:{url:item.url||location.href}};
     try{if(registration){await registration.showNotification(item.title||'Rappel DicoPets',options);return true}new Notification(item.title||'Rappel DicoPets',options);return true}catch{return false}
   }
   function markSent(id){write(read().map(x=>x.id===id?{...x,sent:true}:x))}
@@ -81,7 +92,7 @@
     if(push.reason==='login')return{ok:true,code:'local-only',message:'Notification de test réussie. Connecte-toi à ton compte pour recevoir les rappels lorsque DicoPets est fermé.'};
     return{ok:true,code:'local-only',message:'Notification de test réussie. Le service Supabase doit encore être activé pour les rappels lorsque DicoPets est fermé.'};
   }
-  const style=document.createElement('style');style.textContent='.notification-help{position:fixed;z-index:10000;left:50%;bottom:max(18px,env(safe-area-inset-bottom));width:min(520px,calc(100% - 28px));transform:translateX(-50%);padding:20px 44px 20px 20px;border:1px solid #d5c08f;border-radius:16px;background:#fffdf8;color:#173b30;box-shadow:0 18px 55px #102a2255;font:15px/1.5 Arial,sans-serif}.notification-help strong{display:block;font:700 21px Georgia,serif}.notification-help button{position:absolute;right:10px;top:9px;border:0;background:transparent;color:#173b30;font-size:25px}.notification-help ol{margin-bottom:0;padding-left:20px}.notification-ios-notice{margin:10px 0 14px;padding:11px 13px;border:1px solid #d5c08f;border-radius:11px;background:#fff7dc;color:#173b30;font:14px/1.45 Arial,sans-serif}.notification-ios-notice strong{display:block;margin-bottom:2px}html[data-theme="dark"] .notification-help,html[data-theme="dark"] .notification-ios-notice{background:#17251f;color:#edf4ef;border-color:#6f603e}';document.head.appendChild(style);
-  rearm();addEventListener('focus',rearm);document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&rearm());document.readyState==='loading'?document.addEventListener('DOMContentLoaded',addIOSInstallNotice,{once:true}):addIOSInstallNotice();
+  const style=document.createElement('style');style.textContent='.notification-help{position:fixed;z-index:10000;left:50%;bottom:max(18px,env(safe-area-inset-bottom));width:min(520px,calc(100% - 28px));transform:translateX(-50%);padding:20px 44px 20px 20px;border:1px solid #d5c08f;border-radius:16px;background:#fffdf8;color:#173b30;box-shadow:0 18px 55px #102a2255;font:15px/1.5 Arial,sans-serif}.notification-help strong{display:block;font:700 21px Georgia,serif}.notification-help button{position:absolute;right:10px;top:9px;border:0;background:transparent;color:#173b30;font-size:25px}.notification-help ol{margin-bottom:0;padding-left:20px}.notification-ios-notice{margin:10px 0 14px;padding:11px 13px;border:1px solid #d5c08f;border-radius:11px;background:#fff7dc;color:#173b30;font:14px/1.45 Arial,sans-serif}.notification-ios-notice strong{display:block;margin-bottom:2px}.notification-enable-button{display:inline-flex!important;align-items:center;justify-content:center;gap:8px;min-height:48px;margin:4px 0 10px;font-size:15px!important;cursor:pointer}html[data-theme="dark"] .notification-help,html[data-theme="dark"] .notification-ios-notice{background:#17251f;color:#edf4ef;border-color:#6f603e}';document.head.appendChild(style);
+  function initialise(){ensureReminderButton();bindReminderButton();addIOSInstallNotice()}rearm();addEventListener('focus',rearm);document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&rearm());document.readyState==='loading'?document.addEventListener('DOMContentLoaded',initialise,{once:true}):initialise();
   window.DicoPetsNotifications={enable,schedule,remove,capability,showTest:()=>show({id:'manual-'+Date.now(),title:'Test DicoPets',body:'Les notifications fonctionnent.',url:location.href})};
 })();
